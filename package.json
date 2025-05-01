@@ -1,0 +1,20 @@
+{
+    "private": true,
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build"
+    },
+    "devDependencies": {
+        "@babel/preset-react": "^7.27.1",
+        "@popperjs/core": "^2.11.6",
+        "@vitejs/plugin-react": "^4.2.0",
+        "bootstrap": "^5.2.3",
+        "laravel-vite-plugin": "^1.2.0",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
+        "sass": "^1.56.1"
+    },
+    "dependencies": {
+        "axios": "^1.9.0"
+    }
+}
