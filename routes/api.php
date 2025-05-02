@@ -45,7 +45,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // CRUD Surat (Admin)
     Route::get('/surat', [SuratController::class, 'index']);   // Admin melihat daftar semua surat
     Route::put('/surat/{id}', [SuratController::class, 'update']); // Memperbarui/Approve/Reject surat
-    Route::delete('/surat/{id}', [SuratController::class, 'destroy']); // Menghapus surat
+    //Route::delete('/surat/{id}', [SuratController::class, 'destroy']); // Menghapus surat
 
     // CRUD Profil Desa (Admin)
     Route::post('/profil', [ProfilDesaController::class, 'store']); // Admin menyimpan atau memperbarui profil desa
