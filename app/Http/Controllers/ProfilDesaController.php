@@ -5,55 +5,23 @@ namespace App\Http\Controllers;
 use App\Models\ProfilDesa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str; // Tambahkan ini
 
 class ProfilDesaController extends Controller
 {
     /**
-     * Display a listing of the village profiles.
-     * Mengambil semua profil desa yang ada.
-     *
-     * @return \Illuminate\Http\JsonResponse
+     * Display a listing of the resource.
+     * (GET /profil - Public)
      */
     public function index()
     {
-        // Ambil semua data profil desa
         $profils = ProfilDesa::all();
-
-        if ($profils->isEmpty()) {
-            return response()->json(['message' => 'Belum ada profil desa'], 404);
-        }
-
         return response()->json($profils);
     }
 
     /**
-     * Display the specified village profile by name.
-     * Pencarian case-insensitive dan menangani underscore sebagai spasi.
-     *
-     * @param  string  $nama_desa_url (Nama desa dari URL, bisa mengandung underscore)
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function showByName(string $nama_desa_url)
-    {
-        // Ganti underscore dengan spasi dan decode URL
-        $nama_desa_decoded = urldecode(str_replace('_', ' ', $nama_desa_url));
-
-        // Cari profil desa berdasarkan nama_desa (case-insensitive)
-        $profil = ProfilDesa::whereRaw('LOWER(nama_desa) = ?', [strtolower($nama_desa_decoded)])->first();
-
-        if (!$profil) {
-            return response()->json(['message' => 'Profil desa tidak ditemukan'], 404);
-        }
-
-        return response()->json($profil);
-    }
-
-    /**
-     * Store a newly created or update existing village profile in storage.
-     * Menggunakan updateOrCreate untuk menangani pembuatan baru atau pembaruan.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\JsonResponse
+     * Store a newly created or update an existing resource in storage.
+     * (POST /profil - Requires Auth)
      */
     public function store(Request $request)
     {
@@ -69,23 +37,72 @@ class ProfilDesaController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
+            return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // Gunakan updateOrCreate berdasarkan nama_desa
+        // Menggunakan updateOrCreate berdasarkan nama_desa
         $profil = ProfilDesa::updateOrCreate(
-            ['nama_desa' => $request->nama_desa],
-            $validator->validated() // validated() now includes struktur_organisasi
+            ['nama_desa' => $request->nama_desa], // Kunci pencarian
+            $request->except(['_token', '_method']) // Data untuk diisi/update
         );
 
-        return response()->json([
-            'message' => 'Profil desa berhasil disimpan.',
-            'data' => $profil
-        ], 201);
+        return response()->json($profil, $profil->wasRecentlyCreated ? 201 : 200);
     }
 
-    // Anda bisa menambahkan method lain seperti show, update (dengan PUT/PATCH), destroy jika diperlukan
-    // public function show($id) { ... }
-    // public function update(Request $request, $id) { ... }
-    // public function destroy($id) { ... }
+    /**
+     * Display the specified resource by name (case-insensitive, underscore as space).
+     * (GET /profil/{nama_desa} - Public)
+     */
+    public function showByName(string $nama_desa)
+    {
+        // Normalisasi input: ganti underscore dengan spasi, lowercase
+        $normalizedName = strtolower(str_replace('_', ' ', $nama_desa));
+
+        // Cari di database dengan perbandingan lowercase
+        $profil = ProfilDesa::whereRaw('LOWER(nama_desa) = ?', [$normalizedName])->first();
+
+        if (!$profil) {
+            return response()->json(['message' => 'Profil desa tidak ditemukan'], 404);
+        }
+
+        return response()->json($profil);
+    }
+
+    /**
+     * Remove the specified resource from storage by name.
+     * (DELETE /profil/{nama_desa} - Requires Auth)
+     */
+    public function destroyByName(string $nama_desa)
+    {
+        // Normalisasi input seperti pada showByName
+        $normalizedName = strtolower(str_replace('_', ' ', $nama_desa));
+
+        $profil = ProfilDesa::whereRaw('LOWER(nama_desa) = ?', [$normalizedName])->first();
+
+        if (!$profil) {
+            return response()->json(['message' => 'Profil desa tidak ditemukan'], 404);
+        }
+
+        // Hanya admin yang bisa akses ini (sudah dihandle middleware)
+        $profil->delete();
+
+        return response()->json(['message' => 'Profil desa berhasil dihapus'], 200); // atau 204 No Content
+    }
+
+    /**
+     * Remove the specified resource from storage by ID.
+     * (DELETE /profil/{id} - Requires Auth) - Alternatif jika menggunakan ID
+     */
+    public function destroy(string $id)
+    {
+        $profil = ProfilDesa::find($id);
+        if (!$profil) {
+            return response()->json(['message' => 'Profil desa tidak ditemukan'], 404);
+        }
+
+        // Hanya admin yang bisa akses ini (sudah dihandle middleware)
+        $profil->delete();
+
+        return response()->json(['message' => 'Profil desa berhasil dihapus'], 200); // atau 204 No Content
+    }
 }

@@ -18,6 +18,7 @@ class Surat extends Model
         'status',
         'kode_surat',
         'kode_desa',
+        'catatan_admin', 
     ];
 
     public static function generateNomorSurat()

@@ -4,27 +4,50 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Auth\AuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SuratController;
-use App\Http\Controllers\ProfilDesaController; // <-- Pastikan controller ini diimpor
+use App\Http\Controllers\ProfilDesaController;
 
-Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
-    return $request->user();
-});
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+/*
+|--------------------------------------------------------------------------
+| Rute Autentikasi Admin
+|--------------------------------------------------------------------------
+*/
+Route::post('/register', [AuthController::class, 'register']); // Mungkin hanya untuk setup awal admin
+Route::post('/login', [AuthController::class, 'login']); // Admin login
 
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout']);
-
-    // Rute Surat (Membutuhkan Autentikasi)
-    Route::post('/surat', [SuratController::class, 'store']);  // Ajukan surat
-    Route::get('/surat', [SuratController::class, 'index']);   // Lihat daftar surat
-    Route::put('/surat/{id}', [SuratController::class, 'update']); // Approve/reject surat
-    Route::get('/surat/pdf/{id}', [SuratController::class, 'generatePDF']); // Download PDF
-
-    // Rute POST Profil Desa (Membutuhkan Autentikasi)
-    Route::post('/profil', [ProfilDesaController::class, 'store']); // Menyimpan atau memperbarui profil desa
-});
-
-// Rute GET Profil Desa (Tidak Membutuhkan Autentikasi)
+/*
+|--------------------------------------------------------------------------
+| Rute Publik (Tidak Membutuhkan Autentikasi)
+|--------------------------------------------------------------------------
+*/
+// Rute GET Profil Desa
 Route::get('/profil', [ProfilDesaController::class, 'index']); // Mengambil semua data profil desa
-Route::get('/profil/{nama_desa}', [ProfilDesaController::class, 'showByName']); // Mengambil data profil desa berdasarkan nama (case-insensitive, _ bisa jadi spasi)
+Route::get('/profil/{nama_desa}', [ProfilDesaController::class, 'showByName']); // Mengambil data profil desa berdasarkan nama
+
+// Rute GET Surat berdasarkan NIK (Publik)
+Route::get('/surat/nik/{nik}', [SuratController::class, 'showByNik']); // Lihat daftar surat berdasarkan NIK pengguna
+Route::get('/surat/pdf/{id}', [SuratController::class, 'generatePDF']); // Download PDF surat (jika diinginkan publik)
+// Catatan: Pertimbangkan apakah download PDF harus publik atau memerlukan NIK/auth.
+Route::post('/surat', [SuratController::class, 'store']);  // Membuat surat baru
+
+
+/*
+|--------------------------------------------------------------------------
+| Rute Admin (Membutuhkan Autentikasi - Sanctum) - CRUD Lengkap
+|--------------------------------------------------------------------------
+*/
+Route::middleware('auth:sanctum')->group(function () {
+    // Auth Admin
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/user', function (Request $request) { // Mendapatkan info admin yang login
+        return $request->user();
+    });
+
+    // CRUD Surat (Admin)
+    Route::get('/surat', [SuratController::class, 'index']);   // Admin melihat daftar semua surat
+    Route::put('/surat/{id}', [SuratController::class, 'update']); // Memperbarui/Approve/Reject surat
+    Route::delete('/surat/{id}', [SuratController::class, 'destroy']); // Menghapus surat
+
+    // CRUD Profil Desa (Admin)
+    Route::post('/profil', [ProfilDesaController::class, 'store']); // Admin menyimpan atau memperbarui profil desa
+    Route::delete('/profil/{nama_desa}', [ProfilDesaController::class, 'destroyByName']); 
+});
