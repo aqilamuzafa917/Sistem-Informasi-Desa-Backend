@@ -135,10 +135,8 @@ class SuratController extends Controller
         // Set status awal
         $validatedData['status_surat'] = 'Pending'; // Status awal saat diajukan
         $validatedData['tanggal_request'] = $validatedData['tanggal_request'] ?? now(); // Isi tanggal request jika tidak ada
-
-        // Hapus pemanggilan generateNomorSurat manual
+   
         // Nomor surat akan digenerate oleh Model saat event 'creating'
-
         // Handle file upload jika ada
         if ($request->hasFile('attachment_bukti_pendukung')) {
             // Simpan file dan dapatkan path-nya
