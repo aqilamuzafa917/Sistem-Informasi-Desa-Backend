@@ -15,11 +15,11 @@ return [
     |
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie', '/login', '/logout', '/register'], // Ensure 'api/*' is present
+    'paths' => ['api/*', 'sanctum/csrf-cookie'],
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [env('FRONTEND_URL', 'http://localhost:8000')], // Add your frontend URL via .env
+    'allowed_origins' => [env('FRONTEND_URL', 'http://localhost:3000','http://localhost:8000','http://127.0.0.1:8000','http://127.0.0.1:3000',)], // Add your frontend URL via .env
 
     'allowed_origins_patterns' => [],
 
@@ -29,6 +29,6 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => true, // Set to true if using Sanctum/sessions
+    'supports_credentials' => true,
 
 ];
