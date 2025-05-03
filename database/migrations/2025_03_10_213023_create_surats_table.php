@@ -18,13 +18,13 @@ return new class extends Migration
             $table->string('jenis_surat')->comment('e.g., SK_DOMISILI, SK_KEMATIAN');
             $table->timestamp('tanggal_request')->nullable()->comment('Tanggal permintaan surat dibuat');
             $table->date('tanggal_approval')->nullable()->comment('Tanggal surat disetujui/diterbitkan');
-            $table->unsignedBigInteger('nik_pemohon')->comment('NIK pemohon sebagai FK ke tabel penduduk - untuk mengambil nama, tempat/tanggal lahir, dan jenis kelamin dari tabel penduduk');
+            $table->string('nik_pemohon')->comment('NIK pemohon sebagai FK ke tabel penduduk - untuk mengambil nama, tempat/tanggal lahir, dan jenis kelamin dari tabel penduduk');
             // Kolom berikut dapat dihapus karena seharusnya diambil dari tabel penduduk berdasarkan NIK
             // Dipertahankan untuk sementara dengan flag nullable dan comment yang jelas
-            $table->string('nama_pemohon')->nullable()->comment('Data sementara: seharusnya diambil dari tabel penduduk berdasarkan nik_pemohon'); 
-            $table->enum('jenis_kelamin_pemohon', ['Laki-laki', 'Perempuan'])->nullable()->comment('Data sementara: seharusnya diambil dari tabel penduduk berdasarkan nik_pemohon');
-            $table->string('tempat_lahir_pemohon')->nullable()->comment('Data sementara: seharusnya diambil dari tabel penduduk berdasarkan nik_pemohon');
-            $table->date('tanggal_lahir_pemohon')->nullable()->comment('Data sementara: seharusnya diambil dari tabel penduduk berdasarkan nik_pemohon');
+            // $table->string('nama_pemohon')->nullable()->comment('Data sementara: seharusnya diambil dari tabel penduduk berdasarkan nik_pemohon'); 
+            // $table->enum('jenis_kelamin_pemohon', ['Laki-laki', 'Perempuan'])->nullable()->comment('Data sementara: seharusnya diambil dari tabel penduduk berdasarkan nik_pemohon');
+            // $table->string('tempat_lahir_pemohon')->nullable()->comment('Data sementara: seharusnya diambil dari tabel penduduk berdasarkan nik_pemohon');
+            // $table->date('tanggal_lahir_pemohon')->nullable()->comment('Data sementara: seharusnya diambil dari tabel penduduk berdasarkan nik_pemohon');
             $table->string('keperluan')->comment('Tujuan pembuatan surat');
             $table->enum('status_surat', ['Draft', 'Pending', 'Approved', 'Rejected', 'Printed'])->default('Pending');
             $table->string('catatan')->nullable()->comment('Catatan tambahan untuk petugas');
@@ -33,14 +33,14 @@ return new class extends Migration
             $table->string('attachment_bukti_pendukung')->nullable()->comment('Path atau nama file attachment');
 
             // Kolom Spesifik SK Kematian (nullable)
-            $table->unsignedBigInteger('nik_penduduk_meninggal')->nullable()->comment('NIK penduduk yang meninggal, FK ke tabel penduduk - untuk mengambil nama, tempat/tanggal lahir, dan jenis kelamin dari tabel penduduk');
+            $table->string('nik_penduduk_meninggal')->nullable()->comment('NIK penduduk yang meninggal, FK ke tabel penduduk - untuk mengambil nama, tempat/tanggal lahir, dan jenis kelamin dari tabel penduduk');
             // Kolom berikut dapat dihapus karena seharusnya diambil dari tabel penduduk berdasarkan NIK
             // Dipertahankan untuk sementara dengan flag nullable dan comment yang jelas
-            $table->string('nama_meninggal')->nullable()->comment('Data sementara: seharusnya diambil dari tabel penduduk berdasarkan nik_penduduk_meninggal');
-            $table->string('nik_meninggal')->nullable()->comment('Data sementara: duplikasi dari nik_penduduk_meninggal dalam format string');
-            $table->string('tempat_lahir_meninggal')->nullable()->comment('Data sementara: seharusnya diambil dari tabel penduduk berdasarkan nik_penduduk_meninggal');
-            $table->date('tanggal_lahir_meninggal')->nullable()->comment('Data sementara: seharusnya diambil dari tabel penduduk berdasarkan nik_penduduk_meninggal');
-            $table->enum('jenis_kelamin_meninggal', ['Laki-laki', 'Perempuan'])->nullable()->comment('Data sementara: seharusnya diambil dari tabel penduduk berdasarkan nik_penduduk_meninggal');
+            // $table->string('nama_meninggal')->nullable()->comment('Data sementara: seharusnya diambil dari tabel penduduk berdasarkan nik_penduduk_meninggal');
+            // $table->string('nik_meninggal')->nullable()->comment('Data sementara: duplikasi dari nik_penduduk_meninggal dalam format string');
+            // $table->string('tempat_lahir_meninggal')->nullable()->comment('Data sementara: seharusnya diambil dari tabel penduduk berdasarkan nik_penduduk_meninggal');
+            // $table->date('tanggal_lahir_meninggal')->nullable()->comment('Data sementara: seharusnya diambil dari tabel penduduk berdasarkan nik_penduduk_meninggal');
+            // $table->enum('jenis_kelamin_meninggal', ['Laki-laki', 'Perempuan'])->nullable()->comment('Data sementara: seharusnya diambil dari tabel penduduk berdasarkan nik_penduduk_meninggal');
             $table->string('alamat_terakhir_meninggal')->nullable()->comment('Alamat terakhir penduduk yang meninggal sesuai data kependudukan');
             $table->date('tanggal_kematian')->nullable();
             $table->time('waktu_kematian')->nullable();
@@ -72,9 +72,9 @@ return new class extends Migration
             $table->string('penolong_kelahiran')->nullable();
             $table->decimal('berat_bayi_kg', 4, 2)->nullable()->comment('Berat bayi dalam kg untuk data kesehatan kependudukan');
             $table->decimal('panjang_bayi_cm', 5, 2)->nullable()->comment('Panjang bayi dalam cm untuk data kesehatan kependudukan');
-            $table->unsignedBigInteger('nik_penduduk_ibu')->nullable()->comment('NIK ibu bayi, FK ke tabel penduduk');
-            $table->unsignedBigInteger('nik_penduduk_ayah')->nullable()->comment('NIK ayah bayi, FK ke tabel penduduk');
-            $table->unsignedBigInteger('nik_penduduk_pelapor_lahir')->nullable()->comment('NIK pelapor kelahiran, FK ke tabel penduduk');
+            $table->string('nik_penduduk_ibu')->nullable()->comment('NIK ibu bayi, FK ke tabel penduduk');
+            $table->string('nik_penduduk_ayah')->nullable()->comment('NIK ayah bayi, FK ke tabel penduduk');
+            $table->string('nik_penduduk_pelapor_lahir')->nullable()->comment('NIK pelapor kelahiran, FK ke tabel penduduk');
             $table->string('hubungan_pelapor_lahir')->nullable()->comment('Hubungan pelapor dengan bayi');
 
             // Kolom Spesifik SK Usaha (nullable)
@@ -89,14 +89,14 @@ return new class extends Migration
 
             // Kolom Spesifik Rekom KIS / KIP / SKTM (nullable)
             $table->bigInteger('penghasilan_perbulan_kepala_keluarga')->nullable()->comment('Penghasilan per bulan untuk pendataan ekonomi kependudukan');
-            $table->integer('pekerjaan_kepala_keluarga')->nullable()->comment('Pekerjaan kepala keluarga sesuai kode klasifikasi pekerjaan');
-            $table->unsignedBigInteger('nik_penduduk_siswa')->nullable()->comment('NIK siswa untuk KIP, FK ke tabel penduduk - untuk mengambil nama, tempat/tanggal lahir, dan jenis kelamin dari tabel penduduk');
+            $table->string('pekerjaan_kepala_keluarga')->nullable()->comment('Pekerjaan kepala keluarga sesuai kode klasifikasi pekerjaan');
+            $table->string('nik_penduduk_siswa')->nullable()->comment('NIK siswa untuk KIP, FK ke tabel penduduk - untuk mengambil nama, tempat/tanggal lahir, dan jenis kelamin dari tabel penduduk');
             // Kolom berikut dapat dihapus karena seharusnya diambil dari tabel penduduk berdasarkan NIK
             // Dipertahankan untuk sementara dengan flag nullable dan comment yang jelas
-            $table->string('nama_siswa')->nullable()->comment('Data sementara: seharusnya diambil dari tabel penduduk berdasarkan nik_penduduk_siswa');
-            $table->string('tempat_lahir_siswa')->nullable()->comment('Data sementara: seharusnya diambil dari tabel penduduk berdasarkan nik_penduduk_siswa');
-            $table->date('tanggal_lahir_siswa')->nullable()->comment('Data sementara: seharusnya diambil dari tabel penduduk berdasarkan nik_penduduk_siswa');
-            $table->enum('jenis_kelamin_siswa', ['Laki-laki', 'Perempuan'])->nullable()->comment('Data sementara: seharusnya diambil dari tabel penduduk berdasarkan nik_penduduk_siswa');
+            // $table->string('nama_siswa')->nullable()->comment('Data sementara: seharusnya diambil dari tabel penduduk berdasarkan nik_penduduk_siswa');
+            // $table->string('tempat_lahir_siswa')->nullable()->comment('Data sementara: seharusnya diambil dari tabel penduduk berdasarkan nik_penduduk_siswa');
+            // $table->date('tanggal_lahir_siswa')->nullable()->comment('Data sementara: seharusnya diambil dari tabel penduduk berdasarkan nik_penduduk_siswa');
+            // $table->enum('jenis_kelamin_siswa', ['Laki-laki', 'Perempuan'])->nullable()->comment('Data sementara: seharusnya diambil dari tabel penduduk berdasarkan nik_penduduk_siswa');
             $table->string('nama_sekolah')->nullable();
             $table->string('nisn_siswa')->nullable();
             $table->string('kelas_siswa')->nullable();
@@ -115,31 +115,30 @@ return new class extends Migration
             $table->index('status_surat');
 
             // Foreign key constraints untuk data kependudukan
-            // Uncomment saat table penduduk sudah tersedia
-            
+           
             // PENTING: Semua data demografi (nama, tempat/tanggal lahir, jenis kelamin) 
             // seharusnya diambil dari tabel penduduk berdasarkan NIK
             // dan tidak perlu disimpan di tabel surat ini untuk menghindari redundansi data
-            
+        
             // FK untuk data pemohon
-            // $table->foreign('nik_pemohon')->references('nik')->on('penduduks')->onDelete('cascade')
-            //       ->comment('FK untuk mengambil data demografi pemohon (nama, TTL, jenis kelamin) dari tabel penduduk');
+            $table->foreign('nik_pemohon')->references('nik')->on('penduduks')->onDelete('cascade')
+                  ->comment('FK untuk mengambil data demografi pemohon (nama, TTL, jenis kelamin) dari tabel penduduk');
             
             // FK untuk data penduduk yang meninggal
-            // $table->foreign('nik_penduduk_meninggal')->references('nik')->on('penduduks')->onDelete('set null')
-            //       ->comment('FK untuk mengambil data demografi (nama, TTL, jenis kelamin) penduduk yang meninggal');
+            $table->foreign('nik_penduduk_meninggal')->references('nik')->on('penduduks')->onDelete('set null')
+                  ->comment('FK untuk mengambil data demografi (nama, TTL, jenis kelamin) penduduk yang meninggal');
             
             // FK untuk data kelahiran (orang tua)
-            // $table->foreign('nik_penduduk_ibu')->references('nik')->on('penduduks')->onDelete('set null')
-            //       ->comment('FK untuk mengambil data demografi (nama, TTL, jenis kelamin) ibu dari bayi');
-            // $table->foreign('nik_penduduk_ayah')->references('nik')->on('penduduks')->onDelete('set null')
-            //       ->comment('FK untuk mengambil data demografi (nama, TTL, jenis kelamin) ayah dari bayi');
-            // $table->foreign('nik_penduduk_pelapor_lahir')->references('nik')->on('penduduks')->onDelete('set null')
-            //       ->comment('FK untuk mengambil data demografi (nama, TTL, jenis kelamin) pelapor kelahiran');
+            $table->foreign('nik_penduduk_ibu')->references('nik')->on('penduduks')->onDelete('set null')
+                  ->comment('FK untuk mengambil data demografi (nama, TTL, jenis kelamin) ibu dari bayi');
+            $table->foreign('nik_penduduk_ayah')->references('nik')->on('penduduks')->onDelete('set null')
+                  ->comment('FK untuk mengambil data demografi (nama, TTL, jenis kelamin) ayah dari bayi');
+            $table->foreign('nik_penduduk_pelapor_lahir')->references('nik')->on('penduduks')->onDelete('set null')
+                  ->comment('FK untuk mengambil data demografi (nama, TTL, jenis kelamin) pelapor kelahiran');
             
             // FK untuk data siswa
-            // $table->foreign('nik_penduduk_siswa')->references('nik')->on('penduduks')->onDelete('set null')
-            //       ->comment('FK untuk mengambil data demografi (nama, TTL, jenis kelamin) siswa untuk KIP');
+            $table->foreign('nik_penduduk_siswa')->references('nik')->on('penduduks')->onDelete('set null')
+                  ->comment('FK untuk mengambil data demografi (nama, TTL, jenis kelamin) siswa untuk KIP');
         });
     }
 
