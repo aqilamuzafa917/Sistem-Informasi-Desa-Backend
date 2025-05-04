@@ -224,16 +224,10 @@ Administrator dapat menyetujui atau menolak pengajuan surat dengan menambahkan c
 }
 ```
 
-### 5. Menghapus Pengajuan Surat (Admin)
-
-**Endpoint:** `DELETE /api/surat/{id_surat}`
-
-Administrator dapat menghapus pengajuan surat dari sistem.
-
 ## Persyaratan Sistem
 
 - PHP 8.0 atau lebih tinggi
-- Laravel 9.0 atau lebih tinggi
+- Laravel 12
 - Database MySQL/PostgreSQL/SQLite
 - Composer
 
@@ -241,7 +235,7 @@ Administrator dapat menghapus pengajuan surat dari sistem.
 
 1. Clone repositori:
    ```bash
-   git clone https://github.com/username/sistem-informasi-desa-api-surat.git
+   git clone https://github.com/aqilamuzafa917/Sistem-Informasi-Desa-Backend.git
    cd sistem-informasi-desa-api-surat
    ```
 
