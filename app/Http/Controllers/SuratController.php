@@ -59,12 +59,11 @@ class SuratController extends Controller
                     'provinsi_tujuan' => 'required|string|max:100',
                     'alasan_pindah' => 'required|string|max:255',
                     'klasifikasi_pindah' => 'required|string|max:100',
-                    'data_pengikut_pindah' => 'nullable|array', // Validasi array jika perlu lebih detail
-                    'data_pengikut_pindah.*.nik' => 'sometimes|required|string|digits:16',
-                    'data_pengikut_pindah.*.nama' => 'sometimes|required|string|max:255',
-                    // tambahkan validasi lain untuk pengikut jika perlu
+                    'data_pengikut_pindah' => 'nullable|array', // Validasi lebih detail jika diperlukan
+                    'data_pengikut_pindah.*.nik' => 'required_with:data_pengikut_pindah|string|size:16', // Contoh validasi nested array
                 ];
                 break;
+
             case 'SK_KELAHIRAN':
                 $conditionalRules = [
                      'nama_bayi' => 'required|string|max:255',
@@ -84,8 +83,9 @@ class SuratController extends Controller
                      'hubungan_pelapor_lahir' => 'required|string|max:100',
                 ];
                 break;
+
             case 'SK_USAHA':
-                 $conditionalRules = [
+                $conditionalRules = [
                     'nama_usaha' => 'required|string|max:255',
                     'jenis_usaha' => 'required|string|max:100',
                     'alamat_usaha' => 'required|string|max:500',
@@ -97,29 +97,36 @@ class SuratController extends Controller
                  ];
                  break;
             case 'REKOM_KIP':
-            case 'REKOM_KIS':
-            case 'SKTM':
-                 $conditionalRules = [
-                    'penghasilan_perbulan_kepala_keluarga' => 'required|numeric|min:0',
-                    'pekerjaan_kepala_keluarga' => 'required|string|max:100',
-                    // Field KIP
-                    'nik_penduduk_siswa' => ['required_if:jenis_surat,REKOM_KIP', 'nullable', 'string', 'digits:16', Rule::exists('penduduks', 'nik')],
+            case 'REKOM_KIS': // Gabungkan jika validasinya sama
+            case 'SKTM':      // Gabungkan jika validasinya sama
+                $conditionalRules = [
+                    'penghasilan_perbulan_kepala_keluarga' => 'required|integer|min:0',
+                    'pekerjaan_kepala_keluarga' => 'required|string|max:255',
+                    // Validasi untuk KIP
+                    'nik_penduduk_siswa' => ['required_if:jenis_surat,REKOM_KIP', 'nullable', Rule::exists('penduduks', 'nik')],
                     'nama_sekolah' => 'required_if:jenis_surat,REKOM_KIP|nullable|string|max:255',
-                    'nisn_siswa' => 'required_if:jenis_surat,REKOM_KIP|nullable|string|max:20',
-                    'kelas_siswa' => 'required_if:jenis_surat,REKOM_KIP|nullable|string|max:20',
-                 ];
-                 break;
-             case 'SK_KEHILANGAN_KTP':
+                    'nisn_siswa' => 'required_if:jenis_surat,REKOM_KIP|nullable|string|digits_between:10,10', // NISN biasanya 10 digit
+                    'kelas_siswa' => 'required_if:jenis_surat,REKOM_KIP|nullable|string|max:50',
+                ];
+                break;
+
+            case 'SK_KEHILANGAN_KTP':
                  $conditionalRules = [
-                    'nomor_ktp_hilang' => 'required|string|digits:16',
-                    'tanggal_perkiraan_hilang' => 'required|date',
+                    'nomor_ktp_hilang' => 'required|string|size:16', // NIK KTP biasanya 16 digit
+                    'tanggal_perkiraan_hilang' => 'required|date|before_or_equal:today',
                     'lokasi_perkiraan_hilang' => 'required|string|max:255',
                     'kronologi_singkat' => 'required|string|max:1000',
-                    'nomor_laporan_polisi' => 'nullable|string|max:100',
-                    'tanggal_laporan_polisi' => 'nullable|date|required_with:nomor_laporan_polisi',
+                    'nomor_laporan_polisi' => 'nullable|string|max:100', // Mungkin belum ada saat pengajuan
+                    'tanggal_laporan_polisi' => 'nullable|date|before_or_equal:today', // Mungkin belum ada saat pengajuan
                  ];
                  break;
-             // Tambahkan case lain jika perlu
+
+            // Tambahkan case untuk jenis surat lainnya di sini
+            // ...
+
+            default:
+                // Tidak ada validasi tambahan jika jenis surat tidak dikenali atau umum
+                break;
         }
 
         // Gabungkan rules dan validasi
@@ -237,7 +244,7 @@ class SuratController extends Controller
         unset(
             $inputData['id_surat'],     // Primary key tidak boleh diubah
             $inputData['nomor_surat'], // Nomor surat tidak boleh diubah manual
-            $inputData['jenis_surat'], // Jenis surat sebaiknya tidak diubah
+            // $inputData['jenis_surat'], // Jenis surat sebaiknya tidak diubah
             $inputData['nik_pemohon'], // NIK pemohon sebaiknya tidak diubah di sini
             $inputData['created_at'],  // Timestamp otomatis
             $inputData['updated_at'],  // Timestamp otomatis
@@ -286,9 +293,9 @@ class SuratController extends Controller
              $surat->tanggal_approval = null; // Hapus tanggal approval jika ditolak
         }
 
-        // Set catatan internal
-        if ($request->has('catatan_internal')) {
-            $surat->catatan_internal = $request->catatan_internal;
+        // Set catatan 
+        if ($request->has('catatan')) {
+            $surat->catatan = $request->catatan;
         }
 
         $surat->save();
@@ -319,7 +326,7 @@ class SuratController extends Controller
 
         // Periksa status surat (Gunakan status_surat)
         // Anda mungkin ingin menambahkan status 'Printed' sebagai status valid juga
-        if ($surat->status_surat !== 'Approved' /* && $surat->status_surat !== 'Printed' */) {
+        if ($surat->status_surat !== 'Approved'  && $surat->status_surat !== 'Printed') {
            return response()->json(['message' => 'Surat belum disetujui atau tidak valid untuk diunduh'], 403); // Forbidden
         }
 

@@ -1,66 +1,296 @@
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
 
-## About Laravel
+# Sistem Informasi Desa - API Surat
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+API untuk pengelolaan dan pengajuan berbagai jenis surat administrasi desa. Sistem ini memungkinkan warga untuk mengajukan surat secara online dan administrator desa untuk mengelola pengajuan tersebut.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Daftar Isi
+- [Fitur Utama](#fitur-utama)
+- [Endpoint API](#endpoint-api)
+- [Panduan Penggunaan](#panduan-penggunaan)
+  - [Membuat Pengajuan Surat](#1-membuat-pengajuan-surat-baru)
+  - [Contoh Data Pengajuan](#contoh-data-pengajuan-berdasarkan-jenis-surat)
+  - [Melihat Status Pengajuan](#6-melihat-daftar-surat-berdasarkan-nik-pemohon-publik)
+  - [Mengunduh Surat](#7-mengunduh-pdf-surat-publik)
+- [Operasi Admin](#operasi-admin)
+- [Persyaratan Sistem](#persyaratan-sistem)
+- [Instalasi](#instalasi)
+- [Kontribusi](#kontribusi)
+- [Lisensi](#lisensi)
 
-## Learning Laravel
+## Fitur Utama
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- Pengajuan berbagai jenis surat (Kematian, Pindah, Kelahiran, Usaha, dll)
+- Pelacakan status pengajuan berdasarkan NIK
+- Manajemen pengajuan surat oleh admin desa
+- Pembuatan dokumen PDF otomatis untuk surat yang disetujui
+- Validasi data sesuai jenis surat yang diajukan
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## Endpoint API
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+| Method | Endpoint                   | Fungsi                               | Autentikasi |
+|--------|----------------------------|--------------------------------------|-------------|
+| POST   | `/api/surat`               | Membuat pengajuan surat baru         | Tidak       |
+| GET    | `/api/surat`               | Menampilkan daftar surat (Admin)     | Admin       |
+| GET    | `/api/surat/{id_surat}`    | Melihat detail surat (Admin)         | Admin       |
+| PUT    | `/api/surat/{id_surat}/status` | Memperbarui status surat         | Admin       |
+| DELETE | `/api/surat/{id_surat}`    | Menghapus pengajuan surat            | Admin       |
+| GET    | `/api/surat/nik/{nik}`     | Melihat daftar surat berdasarkan NIK | Tidak       |
+| GET    | `/api/surat/pdf/{id_surat}`| Mengunduh PDF surat                  | Tidak       |
 
-## Laravel Sponsors
+## Panduan Penggunaan
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 1. Membuat Pengajuan Surat Baru
 
-### Premium Partners
+**Endpoint:** `POST /api/surat`
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+**Field umum yang wajib diisi:**
+- `nik_pemohon` - NIK 16 digit yang terdaftar di database penduduk
+- `jenis_surat` - Jenis surat yang diajukan (lihat daftar di bawah)
+- `keperluan` - Tujuan pengajuan surat (maksimal 500 karakter)
+- `tanggal_request` - Tanggal pengajuan (opsional, format: YYYY-MM-DD)
+- `attachment_bukti_pendukung` - File pendukung opsional (jpg/jpeg/png/pdf, maks: 2MB)
 
-## Contributing
+### Contoh Data Pengajuan Berdasarkan Jenis Surat
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+#### SK_KEMATIAN
+```json
+{
+    "nik_pemohon": "3201xxxxxxxxxxxx",
+    "jenis_surat": "SK_KEMATIAN",
+    "keperluan": "Mengurus akta kematian dan klaim asuransi",
+    "nik_penduduk_meninggal": "3201yyyyyyyyyyyy",
+    "tanggal_kematian": "2024-03-10",
+    "waktu_kematian": "15:30",
+    "tempat_kematian": "Rumah Sakit ABC",
+    "penyebab_kematian": "Sakit Jantung",
+    "hubungan_pelapor_kematian": "Anak Kandung"
+}
+```
 
-## Code of Conduct
+#### SK_PINDAH
+```json
+{
+    "nik_pemohon": "3201xxxxxxxxxxxx",
+    "jenis_surat": "SK_PINDAH",
+    "keperluan": "Pindah domisili ke luar kota",
+    "alamat_tujuan": "Jl. Merdeka No. 10",
+    "rt_tujuan": "005",
+    "rw_tujuan": "002",
+    "kelurahan_desa_tujuan": "Sukmajaya",
+    "kecamatan_tujuan": "Cimanggis",
+    "kabupaten_kota_tujuan": "Kota Depok",
+    "provinsi_tujuan": "Jawa Barat",
+    "alasan_pindah": "Mengikuti suami",
+    "klasifikasi_pindah": "Antar Kabupaten/Kota",
+    "data_pengikut_pindah": [
+        {"nik": "3201aaaaaaaaaaaa", "nama": "Nama Anak 1", "hubungan": "Anak"},
+        {"nik": "3201bbbbbbbbbbbb", "nama": "Nama Anak 2", "hubungan": "Anak"}
+    ]
+}
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+#### SK_KELAHIRAN
+```json
+{
+    "nik_pemohon": "3201ibuibuibubbb",
+    "jenis_surat": "SK_KELAHIRAN",
+    "keperluan": "Pembuatan Akta Kelahiran",
+    "nama_bayi": "Budi Santoso",
+    "tempat_dilahirkan": "Rumah Bersalin Sehat",
+    "tempat_kelahiran": "Bogor",
+    "tanggal_lahir_bayi": "2024-03-10",
+    "waktu_lahir_bayi": "08:15",
+    "jenis_kelamin_bayi": "Laki-laki",
+    "jenis_kelahiran": "Tunggal",
+    "anak_ke": 1,
+    "penolong_kelahiran": "Bidan",
+    "berat_bayi_kg": 3.1,
+    "panjang_bayi_cm": 50.5,
+    "nik_penduduk_ibu": "3201ibuibuibubbb",
+    "nik_penduduk_ayah": "3201ayahayahayah",
+    "nik_penduduk_pelapor_lahir": "3201ibuibuibubbb",
+    "hubungan_pelapor_lahir": "Ibu Kandung"
+}
+```
 
-## Security Vulnerabilities
+#### SK_USAHA
+```json
+{
+    "nik_pemohon": "3201usahawanxxxx",
+    "jenis_surat": "SK_USAHA",
+    "keperluan": "Pengajuan pinjaman KUR",
+    "nama_usaha": "Warung Makan Sedap Mantap",
+    "jenis_usaha": "Kuliner",
+    "alamat_usaha": "Jl. Raya Desa No. 45",
+    "status_bangunan_usaha": "Sewa",
+    "perkiraan_modal_usaha": 15000000,
+    "perkiraan_pendapatan_usaha": 5000000,
+    "jumlah_tenaga_kerja": 2,
+    "sejak_tanggal_usaha": "2022-01-15"
+}
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+#### REKOM_KIP
+```json
+{
+    "nik_pemohon": "3201ortuxxxxxxxx",
+    "jenis_surat": "REKOM_KIP",
+    "keperluan": "Pengajuan Kartu Indonesia Pintar",
+    "penghasilan_perbulan_kepala_keluarga": 1500000,
+    "pekerjaan_kepala_keluarga": "Buruh Harian Lepas",
+    "nik_penduduk_siswa": "3201siswasiswaaa",
+    "nama_sekolah": "SDN Desa Makmur 01",
+    "nisn_siswa": "0012345678",
+    "kelas_siswa": "5"
+}
+```
 
-## License
+#### SKTM atau REKOM_KIS
+```json
+{
+    "nik_pemohon": "3201kkkkkkkkkkkk",
+    "jenis_surat": "SKTM",
+    "keperluan": "Pengajuan Bantuan Sosial / KIS",
+    "penghasilan_perbulan_kepala_keluarga": 800000,
+    "pekerjaan_kepala_keluarga": "Petani"
+}
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+#### SK_KEHILANGAN_KTP
+```json
+{
+    "nik_pemohon": "3201hilangktpxxx",
+    "jenis_surat": "SK_KEHILANGAN_KTP",
+    "keperluan": "Mengurus penerbitan KTP baru",
+    "nomor_ktp_hilang": "3201hilangktpxxx",
+    "tanggal_perkiraan_hilang": "2024-03-08",
+    "lokasi_perkiraan_hilang": "Pasar Desa",
+    "kronologi_singkat": "KTP diperkirakan terjatuh saat berbelanja di pasar sekitar pukul 10 pagi.",
+    "nomor_laporan_polisi": "LP/B/123/III/2024/SPKT/POLSEK",
+    "tanggal_laporan_polisi": "2024-03-09"
+}
+```
+
+### 6. Melihat Daftar Surat Berdasarkan NIK Pemohon (Publik)
+
+**Endpoint:** `GET /api/surat/nik/{nik}`
+
+Warga dapat memeriksa status pengajuan surat mereka dengan menyediakan NIK.
+
+**Contoh URL:** `/api/surat/nik/3201xxxxxxxxxxxx`
+
+### 7. Mengunduh PDF Surat (Publik)
+
+**Endpoint:** `GET /api/surat/pdf/{id_surat}`
+
+Setelah surat disetujui, warga dapat mengunduh surat dalam format PDF.
+
+**Contoh URL:** `/api/surat/pdf/15`
+
+## Operasi Admin
+
+### 2. Melihat Daftar Surat (Admin)
+
+**Endpoint:** `GET /api/surat`
+
+Administrator dapat melihat semua pengajuan surat dengan dukungan pagination dan filtering.
+
+**Query Parameters:**
+- `status` - Filter berdasarkan status (`Pending`, `Approved`, `Rejected`)
+- `page` - Nomor halaman
+- `per_page` - Jumlah item per halaman
+
+### 3. Melihat Detail Surat (Admin)
+
+**Endpoint:** `GET /api/surat/{id_surat}`
+
+Administrator dapat melihat detail lengkap pengajuan surat.
+
+### 4. Memperbarui Status Surat (Admin)
+
+**Endpoint:** `PUT /api/surat/{id_surat}/status`
+
+Administrator dapat menyetujui atau menolak pengajuan surat dengan menambahkan catatan.
+
+**Contoh Request Body (JSON):**
+```json
+{
+    "status_surat": "Approved",
+    "catatan": "Data lengkap, silahkan ambil surat di kantor desa."
+}
+```
+
+### 5. Menghapus Pengajuan Surat (Admin)
+
+**Endpoint:** `DELETE /api/surat/{id_surat}`
+
+Administrator dapat menghapus pengajuan surat dari sistem.
+
+## Persyaratan Sistem
+
+- PHP 8.0 atau lebih tinggi
+- Laravel 9.0 atau lebih tinggi
+- Database MySQL/PostgreSQL/SQLite
+- Composer
+
+## Instalasi
+
+1. Clone repositori:
+   ```bash
+   git clone https://github.com/username/sistem-informasi-desa-api-surat.git
+   cd sistem-informasi-desa-api-surat
+   ```
+
+2. Instal dependensi:
+   ```bash
+   composer install
+   ```
+
+3. Salin file konfigurasi:
+   ```bash
+   cp .env.example .env
+   ```
+
+4. Konfigurasikan database di file `.env`
+
+5. Jalankan migrasi database:
+   ```bash
+   php artisan migrate
+   ```
+
+6. Jalankan server:
+   ```bash
+   php artisan serve
+   ```
+
+## Catatan Penting
+
+1. **Autentikasi**: Endpoint admin memerlukan token autentikasi (Bearer Token) di header `Authorization`.
+
+2. **NIK**: Semua NIK yang digunakan dalam request harus sudah terdaftar di tabel `penduduks`.
+
+3. **Format Data**:
+   - Format tanggal: `YYYY-MM-DD`
+   - Format waktu: `HH:MM` atau `HH:MM:SS`
+
+4. **Unggah File**: Untuk request yang menyertakan file, gunakan `Content-Type: multipart/form-data`.
+
+5. **Nomor Surat**: Nomor surat akan digenerate otomatis ketika status diubah menjadi `Approved`.
+
+## Kontribusi
+
+Kontribusi sangat diterima! Silakan buka Issue atau Pull Request.
+
+1. Fork repositori
+2. Buat branch fitur (`git checkout -b feature/amazing-feature`)
+3. Commit perubahan (`git commit -m 'Add some amazing feature'`)
+4. Push ke branch (`git push origin feature/amazing-feature`)
+5. Buka Pull Request
+
+## Lisensi
+
+Proyek ini dilisensikan di bawah Lisensi MIT - lihat file [LICENSE](LICENSE) untuk detail lebih lanjut.

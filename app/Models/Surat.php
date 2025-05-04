@@ -565,12 +565,12 @@ class Surat extends Model
                  return 'KIS';
             case 'SK_TIDAK_MAMPU':
             case 'SKTM':
-                 return 'SKTM'; // Atau TM? Konsistenkan
+                 return 'SKTM'; 
             case 'SK_KEHILANGAN_KTP': return 'HKTP';
             case 'SK_KEHILANGAN_KK': return 'HKK';
             case 'REKOM_SUBSIDI_LISTRIK':
             case 'SUBSIDI_LISTRIK':
-                 return 'SUB'; // Atau SL? Pilih yang singkat & jelas
+                 return 'SUB'; 
             case 'LAIN_LAIN':
             case 'UMUM':
             case 'UMUM_DEFAULT':
