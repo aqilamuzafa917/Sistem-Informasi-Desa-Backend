@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\AuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SuratController;
 use App\Http\Controllers\ProfilDesaController;
+use App\Http\Controllers\PendudukController;
 
 /*
 |--------------------------------------------------------------------------
@@ -43,11 +44,20 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // CRUD Surat (Admin)
+    
     Route::get('/surat', [SuratController::class, 'index']);   // Admin melihat daftar semua surat
-    Route::put('/surat/{id}', [SuratController::class, 'update']); // Memperbarui/Approve/Reject surat
+    Route::put('/surat/{id}/status', [SuratController::class, 'updateStatus']); //Approve/Reject surat
     //Route::delete('/surat/{id}', [SuratController::class, 'destroy']); // Menghapus surat
+    Route::get('/surat/{id}', [SuratController::class, 'show']); // Admin melihat detail satu surat by ID
+    // Route::delete('/surat/{id}', [SuratController::class, 'destroy']);
+    Route::put('/surat/{id}', [SuratController::class, 'update']); // -- Ini untuk Revisi/Update Data Surat --
+
 
     // CRUD Profil Desa (Admin)
     Route::post('/profil', [ProfilDesaController::class, 'store']); // Admin menyimpan atau memperbarui profil desa
     Route::delete('/profil/{nama_desa}', [ProfilDesaController::class, 'destroyByName']); 
+
+    // CRUD Penduduk (Admin)
+    Route::get('/penduduk', [PendudukController::class, 'index']); // Admin melihat daftar semua penduduk
+    Route::get('/penduduk/search', [PendudukController::class, 'searchByNik']); // Admin mencari penduduk berdasarkan NIK
 });

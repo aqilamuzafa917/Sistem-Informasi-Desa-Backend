@@ -1,142 +1,358 @@
 <?php
-namespace App\Http\Controllers;
 
-use App\Models\Surat;
-use Illuminate\Http\Request;
-use Barryvdh\DomPDF\Facade\Pdf;
+namespace App\Http\Controllers; // Pastikan namespace benar
+
 use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Storage;
+use App\Models\Surat;          // Import model Surat
+use Barryvdh\DomPDF\Facade\Pdf; // Import facade PDF
+use App\Models\Penduduk;      // Asumsi ada model Penduduk
+use Illuminate\Validation\Rule; // Import Rule untuk validasi
+use Illuminate\Support\Facades\Validator; // Import Validator untuk validasi kondisional
 
 class SuratController extends Controller
 {
-    // 1. Buat pengajuan surat
+    /**
+     * Simpan pengajuan surat baru.
+     * (POST /surat)
+     */
     public function store(Request $request)
     {
-        $request->validate([
-            'nama' => 'required|string',
-            'nik' => 'required|string',
-            'jenis_surat' => 'required|string',
-            'keperluan' => 'required|string',
-        ]);
+        // --- Validasi Dasar ---
+        $baseRules = [
+            'nik_pemohon' => [
+                'required',
+                Rule::exists('penduduks', 'nik') // Pastikan NIK ada di tabel penduduk
+            ],
+            'jenis_surat' => 'required|string|max:100', // Jenis surat menentukan validasi lain
+            'keperluan' => 'required|string|max:500',
+            'tanggal_request' => 'sometimes|required|date', // Bisa otomatis diisi
+            'attachment_bukti_pendukung' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048', // Contoh validasi file
+        ];
 
-        $nomorSurat = Surat::generateNomorSurat();
+        // --- Validasi Kondisional Berdasarkan Jenis Surat ---
+        $jenisSurat = $request->input('jenis_surat');
+        $conditionalRules = [];
 
-        $surat = Surat::create([
-            'nomor_surat' => $nomorSurat,
-            'nama' => $request->nama,
-            'nik' => $request->nik,
-            'jenis_surat' => $request->jenis_surat,
-            'keperluan' => $request->keperluan,
-            'status' => 'pending', // Default status
-        ]);
+        switch ($jenisSurat) {
+            case 'SK_KEMATIAN':
+                $conditionalRules = [
+                    'nik_penduduk_meninggal' => ['required', 'string', 'digits:16', Rule::exists('penduduks', 'nik')],
+                    'tanggal_kematian' => 'required|date',
+                    'waktu_kematian' => 'required|date_format:H:i', // Format jam:menit
+                    'tempat_kematian' => 'required|string|max:255',
+                    'penyebab_kematian' => 'required|string|max:255',
+                    'hubungan_pelapor_kematian' => 'required|string|max:100',
+                ];
+                break;
+            case 'SK_PINDAH':
+                $conditionalRules = [
+                    'alamat_tujuan' => 'required|string|max:255',
+                    'rt_tujuan' => 'required|string|max:5',
+                    'rw_tujuan' => 'required|string|max:5',
+                    'kelurahan_desa_tujuan' => 'required|string|max:100',
+                    'kecamatan_tujuan' => 'required|string|max:100',
+                    'kabupaten_kota_tujuan' => 'required|string|max:100',
+                    'provinsi_tujuan' => 'required|string|max:100',
+                    'alasan_pindah' => 'required|string|max:255',
+                    'klasifikasi_pindah' => 'required|string|max:100',
+                    'data_pengikut_pindah' => 'nullable|array', // Validasi lebih detail jika diperlukan
+                    'data_pengikut_pindah.*.nik' => 'required_with:data_pengikut_pindah|string|size:16', // Contoh validasi nested array
+                ];
+                break;
+
+            case 'SK_KELAHIRAN':
+                $conditionalRules = [
+                     'nama_bayi' => 'required|string|max:255',
+                     'tempat_dilahirkan' => 'required|string|max:100', // RS, Rumah, dll.
+                     'tempat_kelahiran' => 'required|string|max:100', // Kota/Kabupaten
+                     'tanggal_lahir_bayi' => 'required|date',
+                     'waktu_lahir_bayi' => 'required|date_format:H:i',
+                     'jenis_kelamin_bayi' => 'required|in:Laki-laki,Perempuan',
+                     'jenis_kelahiran' => 'required|string|max:50', // Tunggal, Kembar 2, dll.
+                     'anak_ke' => 'required|integer|min:1',
+                     'penolong_kelahiran' => 'required|string|max:100', // Dokter, Bidan, Dukun, dll.
+                     'berat_bayi_kg' => 'required|numeric|min:0',
+                     'panjang_bayi_cm' => 'required|numeric|min:0',
+                     'nik_penduduk_ibu' => ['required', 'string', 'digits:16', Rule::exists('penduduks', 'nik')],
+                     'nik_penduduk_ayah' => ['nullable', 'string', 'digits:16', Rule::exists('penduduks', 'nik')],
+                     'nik_penduduk_pelapor_lahir' => ['required', 'string', 'digits:16', Rule::exists('penduduks', 'nik')],
+                     'hubungan_pelapor_lahir' => 'required|string|max:100',
+                ];
+                break;
+
+            case 'SK_USAHA':
+                $conditionalRules = [
+                    'nama_usaha' => 'required|string|max:255',
+                    'jenis_usaha' => 'required|string|max:100',
+                    'alamat_usaha' => 'required|string|max:500',
+                    'status_bangunan_usaha' => 'nullable|string|max:100',
+                    'perkiraan_modal_usaha' => 'nullable|numeric|min:0',
+                    'perkiraan_pendapatan_usaha' => 'nullable|numeric|min:0',
+                    'jumlah_tenaga_kerja' => 'nullable|integer|min:0',
+                    'sejak_tanggal_usaha' => 'nullable|date',
+                 ];
+                 break;
+            case 'REKOM_KIP':
+            case 'REKOM_KIS': // Gabungkan jika validasinya sama
+            case 'SKTM':      // Gabungkan jika validasinya sama
+                $conditionalRules = [
+                    'penghasilan_perbulan_kepala_keluarga' => 'required|integer|min:0',
+                    'pekerjaan_kepala_keluarga' => 'required|string|max:255',
+                    // Validasi untuk KIP
+                    'nik_penduduk_siswa' => ['required_if:jenis_surat,REKOM_KIP', 'nullable', Rule::exists('penduduks', 'nik')],
+                    'nama_sekolah' => 'required_if:jenis_surat,REKOM_KIP|nullable|string|max:255',
+                    'nisn_siswa' => 'required_if:jenis_surat,REKOM_KIP|nullable|string|digits_between:10,10', // NISN biasanya 10 digit
+                    'kelas_siswa' => 'required_if:jenis_surat,REKOM_KIP|nullable|string|max:50',
+                ];
+                break;
+
+            case 'SK_KEHILANGAN_KTP':
+                 $conditionalRules = [
+                    'nomor_ktp_hilang' => 'required|string|size:16', // NIK KTP biasanya 16 digit
+                    'tanggal_perkiraan_hilang' => 'required|date|before_or_equal:today',
+                    'lokasi_perkiraan_hilang' => 'required|string|max:255',
+                    'kronologi_singkat' => 'required|string|max:1000',
+                    'nomor_laporan_polisi' => 'nullable|string|max:100', // Mungkin belum ada saat pengajuan
+                    'tanggal_laporan_polisi' => 'nullable|date|before_or_equal:today', // Mungkin belum ada saat pengajuan
+                 ];
+                 break;
+
+            // Tambahkan case untuk jenis surat lainnya di sini
+            // ...
+
+            default:
+                // Tidak ada validasi tambahan jika jenis surat tidak dikenali atau umum
+                break;
+        }
+
+        // Gabungkan rules dan validasi
+        $validator = Validator::make($request->all(), array_merge($baseRules, $conditionalRules));
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422); // Unprocessable Entity
+        }
+
+        // Ambil data yang sudah divalidasi
+        $validatedData = $validator->validated();
+
+        // Set status awal
+        $validatedData['status_surat'] = 'Pending'; // Status awal saat diajukan
+        $validatedData['tanggal_request'] = $validatedData['tanggal_request'] ?? now(); // Isi tanggal request jika tidak ada
+   
+        // Nomor surat akan digenerate oleh Model saat event 'creating'
+        // Handle file upload jika ada
+        if ($request->hasFile('attachment_bukti_pendukung')) {
+            // Simpan file dan dapatkan path-nya
+            $path = $request->file('attachment_bukti_pendukung')->store('bukti_pendukung', 'public'); // Simpan di storage/app/public/bukti_pendukung
+            $validatedData['attachment_bukti_pendukung'] = $path;
+        }
+
+
+        // Buat record surat
+        $surat = Surat::create($validatedData);
+
+        // $surat->nomor_surat sekarang sudah terisi otomatis oleh model
 
         return response()->json([
-            'message' => 'Surat berhasil dibuat',
-            'data' => $surat
+            'message' => 'Pengajuan surat berhasil dibuat',
+            'data' => $surat->load('pemohon') // Muat relasi pemohon jika perlu ditampilkan
         ], 201);
     }
 
-    // 2. Lihat daftar surat (Admin)
-    public function index()
+    /**
+     * Tampilkan daftar surat (Admin).
+     * (GET /surat)
+     */
+    public function index(Request $request)
     {
-        // Sebaiknya tambahkan paginasi untuk performa
-        // $surat = Surat::latest()->paginate(10);
-        // return response()->json($surat);
-        return response()->json(Surat::latest()->get()); // Ambil semua, urutkan terbaru
+        // Query dasar
+        $query = Surat::with('pemohon')->latest(); // Eager load pemohon
+
+        // Filter berdasarkan status (opsional)
+        if ($request->has('status')) {
+            $query->where('status_surat', $request->input('status'));
+        }
+
+        // Filter berdasarkan jenis surat (opsional)
+        if ($request->has('jenis')) {
+            $query->where('jenis_surat', $request->input('jenis'));
+        }
+
+        // Tambahkan paginasi
+        $surat = $query->paginate(15); // Ambil 15 data per halaman
+
+        return response()->json($surat);
     }
 
     /**
-     * Display the specified resource based on NIK.
-     * (GET /surat/nik/{nik} - Public)
+     * Tampilkan detail surat spesifik.
+     * (GET /surat/{id_surat})
+     */
+     public function show(string $id)
+     {
+         // Cari surat berdasarkan ID beserta relasi yang mungkin diperlukan
+         $surat = Surat::with([
+                'pemohon',
+                'pendudukMeninggal',
+                'ibuBayi',
+                'ayahBayi',
+                'pelaporKelahiran',
+                'siswa'
+             ])->find($id); // Gunakan find agar null jika tidak ketemu
+
+         if (!$surat) {
+             return response()->json(['message' => 'Surat tidak ditemukan'], 404);
+         }
+
+         return response()->json($surat);
+     }
+
+
+    /**
+     * Tampilkan daftar surat berdasarkan NIK Pemohon.
+     * (GET /surat/nik/{nik})
      */
     public function showByNik(string $nik)
     {
-        // Validasi NIK (harus angka 16 digit)
         if (!ctype_digit($nik) || strlen($nik) !== 16) {
              return response()->json(['message' => 'Format NIK tidak valid. Harus 16 digit angka.'], 400);
         }
 
-        $surat = Surat::where('nik', $nik)->latest()->get(); // Cari berdasarkan NIK, urutkan terbaru
+        // Gunakan nik_pemohon dan tambahkan paginasi jika perlu
+        $surat = Surat::where('nik_pemohon', $nik)->latest()->paginate(10);
 
         if ($surat->isEmpty()) {
-            // Jika tidak ada surat ditemukan untuk NIK tersebut
             return response()->json(['message' => 'Tidak ada surat ditemukan untuk NIK ini'], 404);
         }
 
-        // Kembalikan daftar surat yang ditemukan
         return response()->json($surat);
     }
-    
-
-    // 3. Admin menyetujui/reject surat
-    public function update(Request $request, $id)
+    public function update(Request $request, string $id)
     {
-        // Validasi input status
-        $request->validate([
-            'status' => 'required|in:approved,rejected',
-            'catatan_admin' => 'nullable|string' // Tambahkan validasi untuk catatan jika ada
-        ]);
+        $surat = Surat::findOrFail($id); // Cari surat atau 404
 
-        $surat = Surat::find($id); // Gunakan find() agar bisa handle not found
-        if (!$surat) {
-            return response()->json(['message' => 'Surat tidak ditemukan'], 404);
-        }
+        // --- Tanpa Validasi Kompleks di Backend (Andalkan Frontend/Input Admin) ---
+        // Ambil semua data dari request
+        $inputData = $request->all();
 
-        // Update status dan catatan admin jika ada
-        $surat->status = $request->status;
-        if ($request->has('catatan_admin')) {
-            $surat->catatan_admin = $request->catatan_admin;
-        }
+        // Hapus field yang seharusnya tidak boleh diupdate dari input
+        // (Penting untuk keamanan dan konsistensi!)
+        unset(
+            $inputData['id_surat'],     // Primary key tidak boleh diubah
+            $inputData['nomor_surat'], // Nomor surat tidak boleh diubah manual
+            // $inputData['jenis_surat'], // Jenis surat sebaiknya tidak diubah
+            $inputData['nik_pemohon'], // NIK pemohon sebaiknya tidak diubah di sini
+            $inputData['created_at'],  // Timestamp otomatis
+            $inputData['updated_at'],  // Timestamp otomatis
+            $inputData['attachment_bukti_pendukung'] // <-- Tambahkan ini ke unset
+        );
+        $surat->fill($inputData);
+
+        // Simpan perubahan ke database
         $surat->save();
 
         return response()->json([
+            'message' => 'Data surat berhasil diperbarui',
+            // Muat ulang data dari DB untuk memastikan konsistensi + load relasi
+            'data' => $surat->fresh()->load('pemohon')
+        ]);
+        
+    }
+
+    /**
+     * Update status surat (Approval/Rejection oleh Admin).
+     * (PUT/PATCH /surat/{id_surat}/status) - Lebih baik gunakan route spesifik
+     */
+    
+    public function updateStatus(Request $request, string $id)
+    {
+        $request->validate([
+            'status_surat' => ['required', Rule::in(['Approved', 'Rejected'])], // Gunakan status dari model
+            'catatan' => 'nullable|string|max:1000'
+        ]);
+
+        $surat = Surat::findOrFail($id); // findOrFail akan otomatis 404 jika tidak ketemu
+
+        // Gunakan metode di model jika ada logika tambahan, jika tidak set langsung
+        if ($request->status_surat === 'Approved') {
+             // Cek apakah sudah ada nomor surat (seharusnya sudah dari creating)
+             if (empty($surat->nomor_surat)) {
+                 // Seharusnya tidak terjadi, tapi sebagai fallback jika proses creating gagal
+                 // Log error atau handle kasus ini
+                 // Mungkin generate ulang? (Hati-hati duplikasi nomor jika ada race condition)
+                  return response()->json(['message' => 'Gagal menyetujui: Nomor surat belum tergenerate.'], 500);
+             }
+             $surat->status_surat = 'Approved';
+             $surat->tanggal_approval = now()->toDateString(); // Set tanggal approval
+        } else {
+             $surat->status_surat = 'Rejected';
+             $surat->tanggal_approval = null; // Hapus tanggal approval jika ditolak
+        }
+
+        // Set catatan 
+        if ($request->has('catatan')) {
+            $surat->catatan = $request->catatan;
+        }
+
+        $surat->save();
+    
+
+        return response()->json([
             'message' => 'Status surat berhasil diperbarui',
-            'data' => $surat // Kembalikan data surat yang sudah diupdate
+            'data' => $surat
         ]);
     }
 
     /**
-     * Remove the specified resource from storage.
-     * (DELETE /surat/{id} - Requires Auth)
-     */
-    public function destroy(string $id)
-    {
-        $surat = Surat::find($id); // Cari surat berdasarkan ID
-        if (!$surat) {
-            // Jika surat tidak ditemukan
-            return response()->json(['message' => 'Surat tidak ditemukan'], 404);
-        }
 
-        // Hapus surat dari database
-        $surat->delete();
-
-        // Kembalikan respons sukses
-        return response()->json(['message' => 'Surat berhasil dihapus'], 200);
-        // Alternatif: return response()->noContent(); // Status 204 jika tidak perlu body respons
-    }
-
-    // 4. Generate PDF surat
-    /**
-     * Generate PDF for the specified resource.
-     * (GET /surat/pdf/{id} - Public, but requires 'approved' or 'disetujui' status)
+     * Generate PDF untuk surat yang sudah disetujui.
+     * (GET /surat/pdf/{id_surat})
      */
     public function generatePDF(string $id)
     {
-        $surat = Surat::find($id);
-        if (!$surat) {
-            // Jika surat dengan ID tersebut tidak ada sama sekali
-            return response()->json(['message' => 'Surat tidak ditemukan'], 404);
+        // Eager load relasi yang dibutuhkan di PDF
+        $surat = Surat::with([
+                    'pemohon',
+                    'pendudukMeninggal',
+                    'ibuBayi',
+                    'ayahBayi',
+                    'pelaporKelahiran',
+                    'siswa'
+                ])->findOrFail($id); // Otomatis 404 jika tidak ada
+
+        // Periksa status surat (Gunakan status_surat)
+        // Anda mungkin ingin menambahkan status 'Printed' sebagai status valid juga
+        if ($surat->status_surat !== 'Approved'  && $surat->status_surat !== 'Printed') {
+           return response()->json(['message' => 'Surat belum disetujui atau tidak valid untuk diunduh'], 403); // Forbidden
         }
 
-        // Periksa apakah status surat sudah 'approved' atau 'disetujui'
-        if ($surat->status !== 'approved' && $surat->status !== 'disetujui') {
-           // Jika status bukan 'approved' dan bukan 'disetujui', kembalikan error Forbidden
-           return response()->json(['message' => 'Surat belum disetujui atau tidak valid untuk diunduh'], 403);
+        // Tentukan view berdasarkan jenis surat (ini bagian penting)
+        $viewName = 'pdf.templates.' . Str::lower(Str::snake($surat->jenis_surat)); // e.g., pdf.templates.sk_kematian
+
+        // Cek apakah view ada, jika tidak gunakan view default/generic
+        if (!view()->exists($viewName)) {
+             // Log::warning("View PDF tidak ditemukan untuk jenis surat: {$surat->jenis_surat}. Menggunakan view default.");
+             $viewName = 'pdf.surat_generic'; // Buat view generic jika perlu
+             if (!view()->exists($viewName)) {
+                  return response()->json(['message' => 'Template PDF tidak ditemukan.'], 500);
+             }
         }
 
-        // Jika surat ditemukan dan statusnya valid, lanjutkan membuat PDF
-        $pdf = Pdf::loadView('pdf.surat', compact('surat')); // Pastikan view pdf.surat ada
-        $filename = 'SURAT-' . Str::slug($surat->jenis_surat, '-') . '-' . $surat->id . '.pdf';
+        // Load view spesifik dengan data surat
+        $pdf = Pdf::loadView($viewName, compact('surat'));
 
+        // Buat nama file yang deskriptif
+        $filename = 'SURAT-'
+                  . Str::upper(Str::slug($surat->jenis_surat, '_')) . '-'
+                  . Str::slug($surat->pemohon->nama ?? $surat->nik_pemohon, '-') . '-' // Gunakan nama pemohon jika ada
+                  . $surat->getKey() // Gunakan ID primary key
+                  . '.pdf';
+
+        // Tawarkan download
         return $pdf->download($filename);
         // Atau tampilkan di browser: return $pdf->stream($filename);
     }

@@ -2,6 +2,7 @@
 
 
 $config = [
+    'kode' => 'BTJR-TMR', // <-- Ganti dengan kode desa/instansi Anda yang sebenarnya
     // Informasi Instansi (Desa/Kelurahan)
     'nama_kabupaten'     => 'BANDUNG BARAT', // Tulis tanpa "Kabupaten" jika di kop sudah ada
     'nama_kecamatan'     => 'BATUJAJAR',     // Tulis tanpa "Kecamatan" jika di kop sudah ada
