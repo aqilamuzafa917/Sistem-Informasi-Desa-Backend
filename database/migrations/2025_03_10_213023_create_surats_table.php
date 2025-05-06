@@ -121,23 +121,23 @@ return new class extends Migration
             // dan tidak perlu disimpan di tabel surat ini untuk menghindari redundansi data
         
             // FK untuk data pemohon
-            $table->foreign('nik_pemohon')->references('nik')->on('penduduks')->onDelete('cascade')
+            $table->foreign('nik_pemohon')->references('nik')->on('penduduk')->onDelete('cascade')
                   ->comment('FK untuk mengambil data demografi pemohon (nama, TTL, jenis kelamin) dari tabel penduduk');
             
             // FK untuk data penduduk yang meninggal
-            $table->foreign('nik_penduduk_meninggal')->references('nik')->on('penduduks')->onDelete('set null')
+            $table->foreign('nik_penduduk_meninggal')->references('nik')->on('penduduk')->onDelete('set null')
                   ->comment('FK untuk mengambil data demografi (nama, TTL, jenis kelamin) penduduk yang meninggal');
             
             // FK untuk data kelahiran (orang tua)
-            $table->foreign('nik_penduduk_ibu')->references('nik')->on('penduduks')->onDelete('set null')
+            $table->foreign('nik_penduduk_ibu')->references('nik')->on('penduduk')->onDelete('set null')
                   ->comment('FK untuk mengambil data demografi (nama, TTL, jenis kelamin) ibu dari bayi');
-            $table->foreign('nik_penduduk_ayah')->references('nik')->on('penduduks')->onDelete('set null')
+            $table->foreign('nik_penduduk_ayah')->references('nik')->on('penduduk')->onDelete('set null')
                   ->comment('FK untuk mengambil data demografi (nama, TTL, jenis kelamin) ayah dari bayi');
-            $table->foreign('nik_penduduk_pelapor_lahir')->references('nik')->on('penduduks')->onDelete('set null')
+            $table->foreign('nik_penduduk_pelapor_lahir')->references('nik')->on('penduduk')->onDelete('set null')
                   ->comment('FK untuk mengambil data demografi (nama, TTL, jenis kelamin) pelapor kelahiran');
             
             // FK untuk data siswa
-            $table->foreign('nik_penduduk_siswa')->references('nik')->on('penduduks')->onDelete('set null')
+            $table->foreign('nik_penduduk_siswa')->references('nik')->on('penduduk')->onDelete('set null')
                   ->comment('FK untuk mengambil data demografi (nama, TTL, jenis kelamin) siswa untuk KIP');
         });
     }
