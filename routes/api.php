@@ -60,4 +60,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // CRUD Penduduk (Admin)
     Route::get('/penduduk', [PendudukController::class, 'index']); // Admin melihat daftar semua penduduk
     Route::get('/penduduk/search', [PendudukController::class, 'searchByNik']); // Admin mencari penduduk berdasarkan NIK
+    Route::post('/penduduk/add', [PendudukController::class, 'addPenduduk']); // Admin menambahkan penduduk baru
+    Route::put('/penduduk/{nik}', [PendudukController::class, 'updatePenduduk']); // Admin memperbarui data penduduk
+    Route::delete('/penduduk/{nik}', [PendudukController::class, 'deletePenduduk']); // Admin menghapus penduduk
+
 });
