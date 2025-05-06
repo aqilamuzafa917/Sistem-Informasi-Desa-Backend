@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\AuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SuratController;
 use App\Http\Controllers\ProfilDesaController;
+use App\Http\Controllers\PendudukController;
 
 /*
 |--------------------------------------------------------------------------
@@ -55,4 +56,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // CRUD Profil Desa (Admin)
     Route::post('/profil', [ProfilDesaController::class, 'store']); // Admin menyimpan atau memperbarui profil desa
     Route::delete('/profil/{nama_desa}', [ProfilDesaController::class, 'destroyByName']); 
+
+    // CRUD Penduduk (Admin)
+    Route::get('/penduduk', [PendudukController::class, 'index']); // Admin melihat daftar semua penduduk
+    Route::get('/penduduk/search', [PendudukController::class, 'searchByNik']); // Admin mencari penduduk berdasarkan NIK
 });
