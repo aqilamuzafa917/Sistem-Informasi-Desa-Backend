@@ -25,4 +25,24 @@ class PendudukController extends Controller
 
         return response()->json($penduduk);
     }
+
+    public function addPenduduk(Request $request)
+    {
+        $penduduk = Penduduk::create($request->all());
+        return response()->json($penduduk, 201);
+    }
+
+    public function updatePenduduk(Request $request, $nik)
+    {
+        $penduduk = Penduduk::findOrFail($nik);
+        $penduduk->update($request->all());
+        return response()->json($penduduk);
+    }
+
+    public function deletePenduduk($nik)
+    {
+        $penduduk = Penduduk::findOrFail($nik);
+        $penduduk->delete();
+        return response()->json(null, 204);
+    }
 }

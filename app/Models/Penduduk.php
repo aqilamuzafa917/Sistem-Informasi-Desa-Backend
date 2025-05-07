@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\Enums\Agama;
+use App\Enums\JenisKelamin;
+use App\Enums\StatusPerkawinan;
 use Illuminate\Database\Eloquent\Model;
 
 class Penduduk extends Model
@@ -37,7 +40,7 @@ class Penduduk extends Model
         'nama' => 'string',
         'tempat_lahir' => 'string',
         'tanggal_lahir' => 'date',
-        'jenis_kelamin' => 'enum: Laki-laki, Perempuan',
+        'jenis_kelamin' => JenisKelamin::class,
         'alamat' => 'string',
         'rt' => 'string',
         'rw' => 'string',
@@ -46,8 +49,8 @@ class Penduduk extends Model
         'kabupaten_kota' => 'string',
         'provinsi' => 'string',
         'kode_pos' => 'string',
-        'agama' => 'enum: Islam, Kristen, Katolik, Hindu, Buddha, Konghucu',
-        'status_perkawinan' => 'enum: Belum Menikah, Menikah, Cerai Hidup, Cerai Mati',
+        'agama' => Agama::class,
+        'status_perkawinan' => StatusPerkawinan::class,
         'pekerjaan' => 'string',
         'kewarganegaraan' => 'string',
     ];
