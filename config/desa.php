@@ -40,4 +40,4 @@ $config = [
 // $pdf = PDF::loadView('nama_view_surat', ['surat' => $dataSurat, 'config' => $config]);
 // return $pdf->stream('surat_keterangan.pdf');
 
-?>
+return $config; // Tambahkan baris ini

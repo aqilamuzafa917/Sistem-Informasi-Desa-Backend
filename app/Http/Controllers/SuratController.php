@@ -25,7 +25,7 @@ class SuratController extends Controller
         $baseRules = [
             'nik_pemohon' => [
                 'required',
-                Rule::exists('penduduks', 'nik') // Pastikan NIK ada di tabel penduduk
+                Rule::exists('penduduk', 'nik') // Pastikan NIK ada di tabel penduduk
             ],
             'jenis_surat' => 'required|string|max:100', // Jenis surat menentukan validasi lain
             'keperluan' => 'required|string|max:500',
@@ -40,7 +40,7 @@ class SuratController extends Controller
         switch ($jenisSurat) {
             case 'SK_KEMATIAN':
                 $conditionalRules = [
-                    'nik_penduduk_meninggal' => ['required', 'string', 'digits:16', Rule::exists('penduduks', 'nik')],
+                    'nik_penduduk_meninggal' => ['required', 'string', 'digits:16', Rule::exists('penduduk', 'nik')],
                     'tanggal_kematian' => 'required|date',
                     'waktu_kematian' => 'required|date_format:H:i', // Format jam:menit
                     'tempat_kematian' => 'required|string|max:255',
@@ -77,9 +77,9 @@ class SuratController extends Controller
                      'penolong_kelahiran' => 'required|string|max:100', // Dokter, Bidan, Dukun, dll.
                      'berat_bayi_kg' => 'required|numeric|min:0',
                      'panjang_bayi_cm' => 'required|numeric|min:0',
-                     'nik_penduduk_ibu' => ['required', 'string', 'digits:16', Rule::exists('penduduks', 'nik')],
-                     'nik_penduduk_ayah' => ['nullable', 'string', 'digits:16', Rule::exists('penduduks', 'nik')],
-                     'nik_penduduk_pelapor_lahir' => ['required', 'string', 'digits:16', Rule::exists('penduduks', 'nik')],
+                     'nik_penduduk_ibu' => ['required', 'string', 'digits:16', Rule::exists('penduduk', 'nik')],
+                     'nik_penduduk_ayah' => ['nullable', 'string', 'digits:16', Rule::exists('penduduk', 'nik')],
+                     'nik_penduduk_pelapor_lahir' => ['required', 'string', 'digits:16', Rule::exists('penduduk', 'nik')],
                      'hubungan_pelapor_lahir' => 'required|string|max:100',
                 ];
                 break;
@@ -103,7 +103,7 @@ class SuratController extends Controller
                     'penghasilan_perbulan_kepala_keluarga' => 'required|integer|min:0',
                     'pekerjaan_kepala_keluarga' => 'required|string|max:255',
                     // Validasi untuk KIP
-                    'nik_penduduk_siswa' => ['required_if:jenis_surat,REKOM_KIP', 'nullable', Rule::exists('penduduks', 'nik')],
+                    'nik_penduduk_siswa' => ['required_if:jenis_surat,REKOM_KIP', 'nullable', Rule::exists('penduduk', 'nik')],
                     'nama_sekolah' => 'required_if:jenis_surat,REKOM_KIP|nullable|string|max:255',
                     'nisn_siswa' => 'required_if:jenis_surat,REKOM_KIP|nullable|string|digits_between:10,10', // NISN biasanya 10 digit
                     'kelas_siswa' => 'required_if:jenis_surat,REKOM_KIP|nullable|string|max:50',

@@ -16,7 +16,7 @@ return [
     |
     */
 
-    'default' => env('DB_CONNECTION', 'sqlite'),
+    'default' => env('DB_CONNECTION', 'pgsql'),
 
     /*
     |--------------------------------------------------------------------------
@@ -82,20 +82,21 @@ return [
             ]) : [],
         ],
 
-        'pgsql' => [
-            'driver' => 'pgsql',
-            'url' => env('DB_URL'),
-            'host' => env('DB_HOST', '127.0.0.1'),
-            'port' => env('DB_PORT', '5432'),
-            'database' => env('DB_DATABASE', 'laravel'),
-            'username' => env('DB_USERNAME', 'root'),
-            'password' => env('DB_PASSWORD', ''),
-            'charset' => env('DB_CHARSET', 'utf8'),
-            'prefix' => '',
-            'prefix_indexes' => true,
-            'search_path' => 'laravel',
-            'sslmode' => 'prefer',
-        ],
+       'pgsql' => [
+        'driver' => 'pgsql',
+        'url' => env('DB_URL'), // This is good if DB_URL is a pgsql string
+        // These are fallbacks if DB_URL is not set or doesn't parse fully
+        'host' => env('DB_HOST', '127.0.0.1'),
+        'port' => env('DB_PORT', '5432'),
+        'database' => env('DB_DATABASE', 'laravel'), // Fallback, DB_URL will override
+        'username' => env('DB_USERNAME', 'root'),    // Fallback, DB_URL will override
+        'password' => env('DB_PASSWORD', ''),       // Fallback, DB_URL will override
+        'charset' => env('DB_CHARSET', 'utf8'),
+        'prefix' => '',
+        'prefix_indexes' => true,
+        'search_path' => env('DB_SEARCH_PATH', 'public'), // << CHANGE THIS to 'public' or use an env var
+        'sslmode' => 'prefer', // Supabase might require 'require' or specific SSL certs for direct connections, but pooler handles it. 'prefer' is fine.
+    ],
         
 
         'sqlsrv' => [

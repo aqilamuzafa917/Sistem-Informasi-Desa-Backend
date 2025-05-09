@@ -108,14 +108,14 @@ class Surat extends Model
     protected $casts = [
         'tanggal_request' => 'datetime',
         'tanggal_approval' => 'date',
-        'tanggal_lahir_pemohon' => 'date',
+        // 'tanggal_lahir_pemohon' => 'date',
         'tanggal_kematian' => 'date',
         // 'waktu_kematian' => 'date_format:H:i', 
-        'tanggal_lahir_meninggal' => 'date',
+        // 'tanggal_lahir_meninggal' => 'date',
 
         'tanggal_lahir_bayi' => 'date',
         // 'waktu_lahir_bayi' => 'date_format:H:i', 
-        'tanggal_lahir_siswa' => 'date',
+        // 'tanggal_lahir_siswa' => 'date',
         'sejak_tanggal_usaha' => 'date',
         'tanggal_perkiraan_hilang' => 'date',
         'tanggal_laporan_polisi' => 'date',
@@ -129,6 +129,55 @@ class Surat extends Model
         'penghasilan_perbulan_kepala_keluarga' => 'integer',
         'pekerjaan_kepala_keluarga' => 'string',
         'anak_ke' => 'integer',
+    ];
+ 
+    protected $hidden = [
+        // Sembunyikan objek relasi penuh
+        'pemohon',
+        'pendudukMeninggal',
+        'ibuBayi',
+        'ayahBayi',
+        'pelaporKelahiran',
+        'siswa',
+
+        
+    ];
+
+    /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = [
+        // Data terkait Pemohon (dari nik_pemohon)
+        'nama_pemohon',
+        'tempat_lahir_pemohon',
+        'tanggal_lahir_pemohon',
+        'jenis_kelamin_pemohon',
+        'alamat_pemohon',
+        'umur_pemohon',
+
+        // Data terkait Penduduk Meninggal (dari nik_penduduk_meninggal untuk SK Kematian)
+        'nama_meninggal',
+        'tempat_lahir_meninggal',
+        'tanggal_lahir_meninggal',
+        'jenis_kelamin_meninggal',
+        'umur_saat_meninggal',
+        'nik_meninggal', // Jika Anda ingin NIK ini juga di-append
+
+        // Data terkait Kelahiran (dari nik_penduduk_ibu, nik_penduduk_ayah, nik_penduduk_pelapor_lahir)
+        'nama_ibu',
+        'umur_ibu_saat_kelahiran',
+        'nama_ayah',
+        'umur_ayah_saat_kelahiran',
+        'nama_pelapor_kelahiran',
+
+        // Data terkait Siswa (dari nik_penduduk_siswa untuk Rekom KIP/KIS/SKTM)
+        'nama_siswa',
+        'tempat_lahir_siswa',
+        'tanggal_lahir_siswa',
+        'jenis_kelamin_siswa',
+        'umur_siswa',
     ];
 
     //===========================================================================
@@ -624,7 +673,8 @@ class Surat extends Model
                            ->count() + 1; // Nomor urut surat berikutnya
         // Mengambil Kode Desa dari file konfigurasi
         // config('namafile.key', 'nilai_default_jika_tidak_ada')
-        $kodeDesa = config('desa.kode', 'KODE_INVALID'); // Memberi default jika config tidak ditemukan
+        
+        $kodeDesa = config('desa.kode', 'KODE_ERROR'); // Perbaikan: Tambahkan 'KODE_INVALID' sebagai default
         // Format Final: KodeKlasifikasi / NomorUrut / Prefix / KodeDesa / BulanRomawi / Tahun
         // Contoh: 472.12/001/KMT/DS.2012/IV/2024
         return sprintf(
