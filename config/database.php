@@ -94,7 +94,7 @@ return [
         'charset' => env('DB_CHARSET', 'utf8'),
         'prefix' => '',
         'prefix_indexes' => true,
-        'search_path' => env('DB_SEARCH_PATH', 'public'), // << CHANGE THIS to 'public' or use an env var
+        'search_path' => 'public', // << CHANGE THIS to 'public' or use an env var
         'sslmode' => 'prefer', // Supabase might require 'require' or specific SSL certs for direct connections, but pooler handles it. 'prefer' is fine.
     ],
         
