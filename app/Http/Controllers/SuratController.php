@@ -29,7 +29,7 @@ class SuratController extends Controller
             ],
             'jenis_surat' => 'required|string|max:100', // Jenis surat menentukan validasi lain
             'keperluan' => 'required|string|max:500',
-            'tanggal_request' => 'sometimes|required|date', // Bisa otomatis diisi
+            'tanggal_pengajuan' => 'sometimes|required|date', // Bisa otomatis diisi
             'attachment_bukti_pendukung' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048', // Contoh validasi file
         ];
 
@@ -141,7 +141,7 @@ class SuratController extends Controller
 
         // Set status awal
         $validatedData['status_surat'] = 'Pending'; // Status awal saat diajukan
-        $validatedData['tanggal_request'] = $validatedData['tanggal_request'] ?? now(); // Isi tanggal request jika tidak ada
+        $validatedData['tanggal_pengajuan'] = $validatedData['tanggal_pengajuan'] ?? now(); // Isi tanggal request jika tidak ada
    
         // Nomor surat akan digenerate oleh Model saat event 'creating'
         // Handle file upload jika ada
@@ -287,10 +287,10 @@ class SuratController extends Controller
                   return response()->json(['message' => 'Gagal menyetujui: Nomor surat belum tergenerate.'], 500);
              }
              $surat->status_surat = 'Approved';
-             $surat->tanggal_approval = now()->toDateString(); // Set tanggal approval
+             $surat->tanggal_disetujui = now()->toDateString(); // Set tanggal approval
         } else {
              $surat->status_surat = 'Rejected';
-             $surat->tanggal_approval = null; // Hapus tanggal approval jika ditolak
+             $surat->tanggal_disetujui = null; // Hapus tanggal approval jika ditolak
         }
 
         // Set catatan 
@@ -314,46 +314,54 @@ class SuratController extends Controller
      */
     public function generatePDF(string $id)
     {
-        // Eager load relasi yang dibutuhkan di PDF
-        $surat = Surat::with([
-                    'pemohon',
-                    'pendudukMeninggal',
-                    'ibuBayi',
-                    'ayahBayi',
-                    'pelaporKelahiran',
-                    'siswa'
-                ])->findOrFail($id); // Otomatis 404 jika tidak ada
+        try {
+            // Eager load relasi yang dibutuhkan di PDF
+            $surat = Surat::with([
+                        'pemohon',
+                        'pendudukMeninggal',
+                        'ibuBayi',
+                        'ayahBayi',
+                        'pelaporKelahiran',
+                        'siswa'
+                    ])->findOrFail($id); // Otomatis 404 jika tidak ada
 
-        // Periksa status surat (Gunakan status_surat)
-        // Anda mungkin ingin menambahkan status 'Printed' sebagai status valid juga
-        if ($surat->status_surat !== 'Approved'  && $surat->status_surat !== 'Printed') {
-           return response()->json(['message' => 'Surat belum disetujui atau tidak valid untuk diunduh'], 403); // Forbidden
+            // Periksa status surat (Gunakan status_surat)
+            // Anda mungkin ingin menambahkan status 'Printed' sebagai status valid juga
+            if ($surat->status_surat !== 'Approved'  && $surat->status_surat !== 'Printed') {
+               return response()->json(['message' => 'Surat belum disetujui atau tidak valid untuk diunduh'], 403); // Forbidden
+            }
+
+            // Tentukan view berdasarkan jenis surat (ini bagian penting)
+            $viewName = 'pdf.templates.' . Str::lower(Str::snake($surat->jenis_surat)); // e.g., pdf.templates.sk_kematian
+
+            // Cek apakah view ada, jika tidak gunakan view default/generic
+            if (!view()->exists($viewName)) {
+                 // Log::warning("View PDF tidak ditemukan untuk jenis surat: {$surat->jenis_surat}. Menggunakan view default.");
+                 $viewName = 'pdf.surat_generic'; // Buat view generic jika perlu
+                 if (!view()->exists($viewName)) {
+                      return response()->json(['message' => 'Template PDF tidak ditemukan.'], 500);
+                 }
+            }
+
+            // Load view spesifik dengan data surat
+            $pdf = Pdf::loadView($viewName, compact('surat'));
+
+            // Buat nama file yang deskriptif
+            $filename = 'SURAT-'
+                      . Str::upper(Str::slug($surat->jenis_surat, '_')) . '-'
+                      . Str::slug($surat->pemohon->nama ?? $surat->nik_pemohon, '-') . '-' // Gunakan nama pemohon jika ada
+                      . $surat->getKey() // Gunakan ID primary key
+                      . '.pdf';
+
+            // Tawarkan download
+            return $pdf->download($filename);
+            // Atau tampilkan di browser: return $pdf->stream($filename);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['message' => 'Surat dengan ID tersebut tidak ditemukan'], 404);
+        } catch (\Exception $e) {
+            // Log error untuk debugging
+            Log::error('Gagal generate PDF: ' . $e->getMessage());
+            return response()->json(['message' => 'Terjadi kesalahan saat membuat PDF surat'], 500);
         }
-
-        // Tentukan view berdasarkan jenis surat (ini bagian penting)
-        $viewName = 'pdf.templates.' . Str::lower(Str::snake($surat->jenis_surat)); // e.g., pdf.templates.sk_kematian
-
-        // Cek apakah view ada, jika tidak gunakan view default/generic
-        if (!view()->exists($viewName)) {
-             // Log::warning("View PDF tidak ditemukan untuk jenis surat: {$surat->jenis_surat}. Menggunakan view default.");
-             $viewName = 'pdf.surat_generic'; // Buat view generic jika perlu
-             if (!view()->exists($viewName)) {
-                  return response()->json(['message' => 'Template PDF tidak ditemukan.'], 500);
-             }
-        }
-
-        // Load view spesifik dengan data surat
-        $pdf = Pdf::loadView($viewName, compact('surat'));
-
-        // Buat nama file yang deskriptif
-        $filename = 'SURAT-'
-                  . Str::upper(Str::slug($surat->jenis_surat, '_')) . '-'
-                  . Str::slug($surat->pemohon->nama ?? $surat->nik_pemohon, '-') . '-' // Gunakan nama pemohon jika ada
-                  . $surat->getKey() // Gunakan ID primary key
-                  . '.pdf';
-
-        // Tawarkan download
-        return $pdf->download($filename);
-        // Atau tampilkan di browser: return $pdf->stream($filename);
     }
 }

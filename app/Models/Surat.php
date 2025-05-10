@@ -30,8 +30,8 @@ class Surat extends Model
     protected $fillable = [
         'nomor_surat',
         'jenis_surat',
-        'tanggal_request',
-        'tanggal_approval',
+        'tanggal_pengajuan',
+        'tanggal_disetujui',
         'nik_pemohon',
         'keperluan',
         'status_surat',
@@ -106,8 +106,8 @@ class Surat extends Model
      * Atribut yang harus dikonversi.
      */
     protected $casts = [
-        'tanggal_request' => 'datetime',
-        'tanggal_approval' => 'date',
+        'tanggal_pengajuan' => 'date',
+        'tanggal_disetujui' => 'date',
         // 'tanggal_lahir_pemohon' => 'date',
         'tanggal_kematian' => 'date',
         // 'waktu_kematian' => 'date_format:H:i', 
@@ -721,7 +721,7 @@ class Surat extends Model
     {
         if ($this->status_surat !== 'Approved') {
             $this->status_surat = 'Approved';
-            $this->tanggal_approval = Carbon::now()->toDateString();
+            $this->tanggal_disetujui = Carbon::now()->toDateString();
             $this->save();
             return true;
         }
@@ -848,10 +848,10 @@ class Surat extends Model
     public function scopeTanggalRequest($query, $start, $end = null)
     {
         if ($end) {
-            return $query->whereBetween('tanggal_request', [$start, $end]);
+            return $query->whereBetween('tanggal_pengajuan', [$start, $end]);
         }
         
-        return $query->whereDate('tanggal_request', $start);
+        return $query->whereDate('tanggal_pengajuan', $start);
     }
     
     /**

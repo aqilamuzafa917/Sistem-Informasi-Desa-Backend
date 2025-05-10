@@ -95,12 +95,12 @@
 </head>
 <body>
     <div class="header">
-        <img src="{{ public_path('images/logo.png') }}" alt="Logo Kabupaten Bandung Barat" class="logo">
+        <img src="{{ public_path('images/logo.png') }}" alt="Logo Kabupaten {{ config('desa.nama_kabupaten') }}" class="logo">
         <div class="header-text">
-            <h2>PEMERINTAH KABUPATEN BANDUNG BARAT</h2>
-            <h3>KECAMATAN BATUJAJAR</h3>
-            <h3>DESA BATUJAJAR TIMUR</h3>
-            <p class="address">Jl. Raya Batujajar No.191, Batujajar Tim., Kec. Batujajar, Kabupaten Bandung Barat, Jawa Barat 40561</p>
+            <h2>PEMERINTAH KABUPATEN {{ strtoupper(config('desa.nama_kabupaten')) }}</h2>
+            <h3>KECAMATAN {{ strtoupper(config('desa.nama_kecamatan')) }}</h3>
+            <h3>DESA {{ strtoupper(config('desa.nama_desa')) }}</h3>
+            <p class="address">{{ config('desa.alamat_desa') }}</p>
         </div>
     </div>
     <div class="line"></div>
@@ -108,11 +108,11 @@
     <div class="title">SURAT KETERANGAN</div>
     <p class="nomor">Nomor: {{ $surat->nomor_surat }}</p>
 
-    <p>Yang bertandatangan dibawah ini, Kepala Desa Batujajar Timur Kecamatan Batujajar Kabupaten Bandung Barat:</p>
+    <p>Yang bertandatangan dibawah ini, Kepala Desa {{ ucwords(config('desa.nama_desa')) }} Kecamatan {{ ucwords(config('desa.nama_kecamatan')) }} Kabupaten {{ ucwords(config('desa.nama_kabupaten')) }}:</p>
     
     <table class="info-table">
         @foreach ($surat->toArray() as $key => $value)
-            @if (!is_null($value) && $value !== '' && !in_array($key, ['id_surat', 'created_at', 'updated_at', 'nomor_surat']))
+            @if (!is_null($value) && $value !== '' && !in_array($key, ['id_surat', 'created_at', 'updated_at', 'nomor_surat', 'jenis_surat']))
                 <tr>
                     <td width="200" style="vertical-align: top;">
                         @php
@@ -169,11 +169,11 @@
         @endforeach
     </table>
 
-    <p>Demikian surat keterangan ini kami buat dengan sebenarnya, kepada pihak yang berkepentingan agar menjadi tahu serta maklum hendaknya.</p>
+    <p>Demikian surat keterangan ini kami buat dengan sebenarnya, kepada pihak yang berkepentingan.</p>
 
     <div class="footer">
-        <p>Batujajar Timur, {{ date('d F Y') }}</p>
-        <p>Kepala Desa Batujajar Timur</p>
+        <p>{{ config('desa.nama_desa') }}, {{ \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y') }}</p>
+        <p>{{ config('desa.jabatan_kepala') }} {{ config('desa.nama_desa') }}</p>
         
         <div class="signature"></div>
     </div>

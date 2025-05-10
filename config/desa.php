@@ -4,20 +4,20 @@
 $config = [
     'kode' => 'BTJR-TMR', // <-- Ganti dengan kode desa/instansi Anda yang sebenarnya
     // Informasi Instansi (Desa/Kelurahan)
-    'nama_kabupaten'     => 'BANDUNG BARAT', // Tulis tanpa "Kabupaten" jika di kop sudah ada
-    'nama_kecamatan'     => 'BATUJAJAR',     // Tulis tanpa "Kecamatan" jika di kop sudah ada
-    'nama_desa'          => 'BATUJAJAR TIMUR', // Atau 'nama_kelurahan'
-    'alamat_desa'        => 'Jl. Raya Batujajar No.191, Batujajar Tim., Kec. Batujajar, Kabupaten Bandung Barat, Jawa Barat 40561',
+    'nama_kabupaten'     => 'Bandung Barat', // Tulis tanpa "Kabupaten" jika di kop sudah ada
+    'nama_kecamatan'     => 'Batujajar',     // Tulis tanpa "Kecamatan" jika di kop sudah ada
+    'nama_desa'          => 'Batujajar Timur', // Atau 'nama_kelurahan'
+    'alamat_desa'        => 'Jl. Raya Batujajar No.191, Batujajar Timur, Kec. Batujajar, Kabupaten Bandung Barat, Jawa Barat 40561',
     'kode_pos'           => '40561', // Opsional, jika diperlukan terpisah
 
     // Informasi Pejabat Utama (Kepala Desa/Lurah)
-    'jabatan_kepala'     => 'KEPALA DESA', // Bisa juga 'LURAH'
-    'nama_kepala_desa'   => 'NAMA KEPALA DESA DI SINI', // Nama lengkap Kepala Desa/Lurah
+    'jabatan_kepala'     => 'Kepala Desa', // Bisa juga 'LURAH'
+    'nama_kepala_desa'   => 'Nama Kepala Desa', // Nama lengkap Kepala Desa/Lurah
 
     // Informasi Pejabat Penandatangan (Bisa Kepala Desa, Sekdes, dll.)
     // Ini yang akan muncul di bagian TTD
-    'jabatan_ttd'        => 'KEPALA DESA', // Defaultnya Kepala Desa. Bisa diubah menjadi 'SEKRETARIS DESA', 'Plt. KEPALA DESA', atau 'SEKRETARIS DESA a.n KEPALA DESA'
-    'nama_pejabat_ttd'   => 'NAMA PEJABAT PENANDATANGAN', // Nama yang akan tercetak di bawah TTD
+    'jabatan_ttd'        => 'Kepala Desa', // Defaultnya Kepala Desa. Bisa diubah menjadi 'SEKRETARIS DESA', 'Plt. KEPALA DESA', atau 'SEKRETARIS DESA a.n KEPALA DESA'
+    'nama_pejabat_ttd'   => 'Kepala Penandatangan', // Nama yang akan tercetak di bawah TTD
     'nip_pejabat_ttd'    => '19XXXXXXXXXXXXXX', // NIP pejabat penandatangan (jika ada, biarkan kosong '' atau null jika tidak ada)
 
     // Path Logo

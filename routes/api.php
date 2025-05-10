@@ -46,7 +46,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // CRUD Surat (Admin)
     
     Route::get('/surat', [SuratController::class, 'index']);   // Admin melihat daftar semua surat
-    Route::put('/surat/{id}/status', [SuratController::class, 'updateStatus']); //Approve/Reject surat
+    Route::put('/surat/status/{id}', [SuratController::class, 'updateStatus']); //Approve/Reject surat
     //Route::delete('/surat/{id}', [SuratController::class, 'destroy']); // Menghapus surat
     Route::get('/surat/{id}', [SuratController::class, 'show']); // Admin melihat detail satu surat by ID
     // Route::delete('/surat/{id}', [SuratController::class, 'destroy']);

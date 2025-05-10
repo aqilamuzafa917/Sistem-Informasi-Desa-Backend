@@ -16,8 +16,8 @@ return new class extends Migration
             $table->id('id_surat'); // Mengganti nama default 'id' menjadi 'id_surat'
             $table->string('nomor_surat')->nullable()->comment('Nomor surat resmi, bisa diisi setelah approval');
             $table->string('jenis_surat')->comment('e.g., SK_DOMISILI, SK_KEMATIAN');
-            $table->timestamp('tanggal_request')->nullable()->comment('Tanggal permintaan surat dibuat');
-            $table->date('tanggal_approval')->nullable()->comment('Tanggal surat disetujui/diterbitkan');
+            $table->timestamp('tanggal_pengajuan')->nullable()->comment('Tanggal permintaan surat dibuat');
+            $table->date('tanggal_disetujui')->nullable()->comment('Tanggal surat disetujui/diterbitkan');
             $table->string('nik_pemohon')->comment('NIK pemohon sebagai FK ke tabel penduduk - untuk mengambil nama, tempat/tanggal lahir, dan jenis kelamin dari tabel penduduk');
             // Kolom berikut dapat dihapus karena seharusnya diambil dari tabel penduduk berdasarkan NIK
             // Dipertahankan untuk sementara dengan flag nullable dan comment yang jelas
