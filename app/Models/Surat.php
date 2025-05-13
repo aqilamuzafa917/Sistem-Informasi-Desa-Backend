@@ -164,6 +164,7 @@ class Surat extends Model
         'jenis_kelamin_meninggal',
         'umur_saat_meninggal',
         'nik_meninggal', // Jika Anda ingin NIK ini juga di-append
+        'hari_kematian', // Tambahkan ini
 
         // Data terkait Kelahiran (dari nik_penduduk_ibu, nik_penduduk_ayah, nik_penduduk_pelapor_lahir)
         'nama_ibu',
@@ -382,6 +383,19 @@ class Surat extends Model
         }
         
         return null;
+    }
+
+    /**
+     * Mengambil hari kematian dari tanggal kematian.
+     */
+    public function getHariKematianAttribute()
+    {
+        if (!isset($this->attributes['tanggal_kematian'])) {
+            return null;
+        }
+        
+        // Pastikan Carbon menggunakan lokal Indonesia untuk nama hari
+        return Carbon::parse($this->attributes['tanggal_kematian'])->locale('id_ID')->dayName;
     }
 
     /**
@@ -665,16 +679,16 @@ class Surat extends Model
         $bulan = $now->month;
         $bulanRomawi = self::getBulanRomawi($bulan);
 
-        // Hitung jumlah surat yang sudah dibuat pada bulan dan tahun ini
-        // (Strategi: nomor urut global per bulan/tahun)
-        // Jika perlu nomor urut per jenis surat atau per klasifikasi, tambahkan filter where()
+        // Hitung jumlah surat yang sudah disetujui (status 'Disetujui') pada bulan dan tahun ini
+        // Perubahan: Hanya menghitung surat dengan status 'Disetujui'
         $count = $modelClass::whereYear('created_at', $tahun)
                            ->whereMonth('created_at', $bulan)
+                           ->where('status_surat', 'Disetujui')
                            ->count() + 1; // Nomor urut surat berikutnya
-        // Mengambil Kode Desa dari file konfigurasi
-        // config('namafile.key', 'nilai_default_jika_tidak_ada')
         
+        // Mengambil Kode Desa dari file konfigurasi
         $kodeDesa = config('desa.kode', 'KODE_ERROR'); // Perbaikan: Tambahkan 'KODE_INVALID' sebagai default
+        
         // Format Final: KodeKlasifikasi / NomorUrut / Prefix / KodeDesa / BulanRomawi / Tahun
         // Contoh: 472.12/001/KMT/DS.2012/IV/2024
         return sprintf(
@@ -696,21 +710,8 @@ class Surat extends Model
     {
         parent::boot(); // Jangan lupa panggil parent boot
 
-        static::creating(function ($surat) {
-            // Hanya generate jika nomor_surat masih kosong (belum diisi manual)
-            if (empty($surat->nomor_surat)) {
-                 // Pastikan properti 'jenis_surat' sudah di-set
-                 if (!empty($surat->jenis_surat)) {
-                     // Panggil generator untuk mendapatkan nomor baru
-                     $surat->nomor_surat = self::generateNomorSurat($surat->jenis_surat);
-                 } else {
-                     // Handle kasus jika jenis_surat kosong (opsional)
-                     // Misalnya, set nomor default atau throw exception
-                     Log::warning('Jenis surat tidak diset saat mencoba generate nomor otomatis.');
-                     $surat->nomor_surat = self::generateNomorSurat('UMUM'); // Contoh fallback
-                 }
-            }
-        });
+        // Hapus event creating yang menggenerate nomor surat
+        // Nomor surat akan digenerate saat approval
     }
 
     
@@ -719,8 +720,13 @@ class Surat extends Model
      */
     public function approve()
     {
-        if ($this->status_surat !== 'Approved') {
-            $this->status_surat = 'Approved';
+        if ($this->status_surat !== 'Disetujui') {
+            // Generate nomor surat saat approval
+            if (empty($this->nomor_surat)) {
+                $this->nomor_surat = self::generateNomorSurat($this->jenis_surat);
+            }
+            
+            $this->status_surat = 'Disetujui';
             $this->tanggal_disetujui = Carbon::now()->toDateString();
             $this->save();
             return true;
@@ -734,8 +740,8 @@ class Surat extends Model
      */
     public function reject()
     {
-        if ($this->status_surat !== 'Rejected') {
-            $this->status_surat = 'Rejected';
+        if ($this->status_surat !== 'Ditolak') {
+            $this->status_surat = 'Ditolak';
             $this->save();
             return true;
         }
@@ -748,7 +754,7 @@ class Surat extends Model
      */
     public function markAsPrinted()
     {
-        if ($this->status_surat === 'Approved') {
+        if ($this->status_surat === 'Disetujui') {
             $this->status_surat = 'Printed';
             $this->save();
             return true;
@@ -859,6 +865,6 @@ class Surat extends Model
      */
     public function scopeBelumDiproses($query)
     {
-        return $query->where('status_surat', 'Pending');
+        return $query->where('status_surat', 'Diajukan');
     }
 }

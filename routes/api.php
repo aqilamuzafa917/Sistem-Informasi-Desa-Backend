@@ -26,8 +26,7 @@ Route::get('/profil/{nama_desa}', [ProfilDesaController::class, 'showByName']); 
 
 // Rute GET Surat berdasarkan NIK (Publik)
 Route::get('/surat/nik/{nik}', [SuratController::class, 'showByNik']); // Lihat daftar surat berdasarkan NIK pengguna
-Route::get('/surat/pdf/{id}', [SuratController::class, 'generatePDF']); // Download PDF surat (jika diinginkan publik)
-// Catatan: Pertimbangkan apakah download PDF harus publik atau memerlukan NIK/auth.
+Route::get('/surat/pdf/{nik}/{id}', [SuratController::class, 'generatePDF']); // Download PDF surat (jika diinginkan publik)
 Route::post('/surat', [SuratController::class, 'store']);  // Membuat surat baru
 
 

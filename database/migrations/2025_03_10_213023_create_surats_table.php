@@ -26,7 +26,7 @@ return new class extends Migration
             // $table->string('tempat_lahir_pemohon')->nullable()->comment('Data sementara: seharusnya diambil dari tabel penduduk berdasarkan nik_pemohon');
             // $table->date('tanggal_lahir_pemohon')->nullable()->comment('Data sementara: seharusnya diambil dari tabel penduduk berdasarkan nik_pemohon');
             $table->string('keperluan')->comment('Tujuan pembuatan surat');
-            $table->enum('status_surat', ['Draft', 'Pending', 'Approved', 'Rejected', 'Printed'])->default('Pending');
+            $table->enum('status_surat', ['Draft', 'Diajukan', 'Disetujui', 'Ditolak', 'Printed'])->default('Diajukan');
             $table->string('catatan')->nullable()->comment('Catatan tambahan untuk petugas');
             $table->timestamps(); // created_at dan updated_at
             // Kolom baru untuk attachment bukti pendukung

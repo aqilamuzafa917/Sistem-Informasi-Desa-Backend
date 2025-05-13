@@ -140,7 +140,7 @@ class SuratController extends Controller
         $validatedData = $validator->validated();
 
         // Set status awal
-        $validatedData['status_surat'] = 'Pending'; // Status awal saat diajukan
+        $validatedData['status_surat'] = 'Diajukan'; // Status awal saat diajukan
         $validatedData['tanggal_pengajuan'] = $validatedData['tanggal_pengajuan'] ?? now(); // Isi tanggal request jika tidak ada
    
         // Nomor surat akan digenerate oleh Model saat event 'creating'
@@ -244,7 +244,7 @@ class SuratController extends Controller
         unset(
             $inputData['id_surat'],     // Primary key tidak boleh diubah
             $inputData['nomor_surat'], // Nomor surat tidak boleh diubah manual
-            // $inputData['jenis_surat'], // Jenis surat sebaiknya tidak diubah
+            $inputData['jenis_surat'], // Jenis surat sebaiknya tidak diubah
             $inputData['nik_pemohon'], // NIK pemohon sebaiknya tidak diubah di sini
             $inputData['created_at'],  // Timestamp otomatis
             $inputData['updated_at'],  // Timestamp otomatis
@@ -271,26 +271,25 @@ class SuratController extends Controller
     public function updateStatus(Request $request, string $id)
     {
         $request->validate([
-            'status_surat' => ['required', Rule::in(['Approved', 'Rejected'])], // Gunakan status dari model
+            'status_surat' => ['required', Rule::in(['Disetujui', 'Ditolak'])], // Gunakan status dari model
             'catatan' => 'nullable|string|max:1000'
         ]);
 
         $surat = Surat::findOrFail($id); // findOrFail akan otomatis 404 jika tidak ketemu
 
         // Gunakan metode di model jika ada logika tambahan, jika tidak set langsung
-        if ($request->status_surat === 'Approved') {
-             // Cek apakah sudah ada nomor surat (seharusnya sudah dari creating)
-             if (empty($surat->nomor_surat)) {
-                 // Seharusnya tidak terjadi, tapi sebagai fallback jika proses creating gagal
-                 // Log error atau handle kasus ini
-                 // Mungkin generate ulang? (Hati-hati duplikasi nomor jika ada race condition)
-                  return response()->json(['message' => 'Gagal menyetujui: Nomor surat belum tergenerate.'], 500);
-             }
-             $surat->status_surat = 'Approved';
-             $surat->tanggal_disetujui = now()->toDateString(); // Set tanggal approval
+        if ($request->status_surat === 'Disetujui') {
+            // Generate nomor surat saat approval
+            if (empty($surat->nomor_surat)) {
+                // Generate nomor surat menggunakan metode di model
+                $surat->nomor_surat = Surat::generateNomorSurat($surat->jenis_surat);
+            }
+            
+            $surat->status_surat = 'Disetujui';
+            $surat->tanggal_disetujui = now()->toDateString(); // Set tanggal approval
         } else {
-             $surat->status_surat = 'Rejected';
-             $surat->tanggal_disetujui = null; // Hapus tanggal approval jika ditolak
+            $surat->status_surat = 'Ditolak';
+            $surat->tanggal_disetujui = null; // Hapus tanggal approval jika ditolak
         }
 
         // Set catatan 
@@ -310,11 +309,16 @@ class SuratController extends Controller
     /**
 
      * Generate PDF untuk surat yang sudah disetujui.
-     * (GET /surat/pdf/{id_surat})
+     * (GET /surat/pdf/{nik}/{id_surat})
      */
-    public function generatePDF(string $id)
+    public function generatePDF(string $nik, string $id)
     {
         try {
+            // Validasi NIK
+            if (!ctype_digit($nik) || strlen($nik) !== 16) {
+                return response()->json(['message' => 'Format NIK tidak valid. Harus 16 digit angka.'], 400);
+            }
+
             // Eager load relasi yang dibutuhkan di PDF
             $surat = Surat::with([
                         'pemohon',
@@ -325,14 +329,19 @@ class SuratController extends Controller
                         'siswa'
                     ])->findOrFail($id); // Otomatis 404 jika tidak ada
 
+            // Periksa apakah NIK pemohon cocok
+            if ($surat->nik_pemohon !== $nik) {
+                return response()->json(['message' => 'Akses ditolak. NIK tidak sesuai dengan data surat.'], 403); // Forbidden
+            }
+
             // Periksa status surat (Gunakan status_surat)
             // Anda mungkin ingin menambahkan status 'Printed' sebagai status valid juga
-            if ($surat->status_surat !== 'Approved'  && $surat->status_surat !== 'Printed') {
+            if ($surat->status_surat !== 'Disetujui'  && $surat->status_surat !== 'Printed') {
                return response()->json(['message' => 'Surat belum disetujui atau tidak valid untuk diunduh'], 403); // Forbidden
             }
 
             // Tentukan view berdasarkan jenis surat (ini bagian penting)
-            $viewName = 'pdf.templates.' . Str::lower(Str::snake($surat->jenis_surat)); // e.g., pdf.templates.sk_kematian
+            $viewName = 'pdf.templates.' . Str::lower($surat->jenis_surat); 
 
             // Cek apakah view ada, jika tidak gunakan view default/generic
             if (!view()->exists($viewName)) {
@@ -344,12 +353,12 @@ class SuratController extends Controller
             }
 
             // Load view spesifik dengan data surat
-            $pdf = Pdf::loadView($viewName, compact('surat'));
+            $pdf = Pdf::loadView($viewName, compact('surat'))->setPaper('a4', 'portrait'); // Tambahkan setPaper('a4', 'portrait')
 
             // Buat nama file yang deskriptif
-            $filename = 'SURAT-'
-                      . Str::upper(Str::slug($surat->jenis_surat, '_')) . '-'
-                      . Str::slug($surat->pemohon->nama ?? $surat->nik_pemohon, '-') . '-' // Gunakan nama pemohon jika ada
+            $filename = 'SURAT_'
+                      . Str::upper(Str::slug($surat->jenis_surat, '_')) . '_'
+                      . Str::upper(Str::slug($surat->pemohon->nama ?? $surat->nik_pemohon, '_')) . '_' // Gunakan nama pemohon jika ada
                       . $surat->getKey() // Gunakan ID primary key
                       . '.pdf';
 

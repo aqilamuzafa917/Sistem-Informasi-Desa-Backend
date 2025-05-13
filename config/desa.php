@@ -9,16 +9,16 @@ $config = [
     'nama_desa'          => 'Batujajar Timur', // Atau 'nama_kelurahan'
     'alamat_desa'        => 'Jl. Raya Batujajar No.191, Batujajar Timur, Kec. Batujajar, Kabupaten Bandung Barat, Jawa Barat 40561',
     'kode_pos'           => '40561', // Opsional, jika diperlukan terpisah
-
+    'nama_provinsi'       => 'Jawa Barat',
     // Informasi Pejabat Utama (Kepala Desa/Lurah)
     'jabatan_kepala'     => 'Kepala Desa', // Bisa juga 'LURAH'
     'nama_kepala_desa'   => 'Nama Kepala Desa', // Nama lengkap Kepala Desa/Lurah
 
     // Informasi Pejabat Penandatangan (Bisa Kepala Desa, Sekdes, dll.)
     // Ini yang akan muncul di bagian TTD
-    'jabatan_ttd'        => 'Kepala Desa', // Defaultnya Kepala Desa. Bisa diubah menjadi 'SEKRETARIS DESA', 'Plt. KEPALA DESA', atau 'SEKRETARIS DESA a.n KEPALA DESA'
-    'nama_pejabat_ttd'   => 'Kepala Penandatangan', // Nama yang akan tercetak di bawah TTD
-    'nip_pejabat_ttd'    => '19XXXXXXXXXXXXXX', // NIP pejabat penandatangan (jika ada, biarkan kosong '' atau null jika tidak ada)
+    'jabatan_ttd'        => 'Jabatan Tandatangan', // Defaultnya Kepala Desa. Bisa diubah menjadi 'SEKRETARIS DESA', 'Plt. KEPALA DESA', atau 'SEKRETARIS DESA a.n KEPALA DESA'
+    'nama_pejabat_ttd'   => 'Nama Pejabat Tandatangan', // Nama yang akan tercetak di bawah TTD
+    'nip_pejabat_ttd'    => '19XXXXXXXXXXXXXXttd', // NIP pejabat penandatangan (jika ada, biarkan kosong '' atau null jika tidak ada)
 
     // Path Logo
     // Sesuaikan path ini agar bisa diakses oleh library PDF generator Anda.
