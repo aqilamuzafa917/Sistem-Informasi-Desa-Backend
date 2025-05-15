@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Surat Keterangan Domisili - {{ optional($surat->pemohon)->nama ?? $surat->nik_pemohon }}</title>
+    <title>Surat Keterangan Usaha - {{ optional($surat->pemohon)->nama ?? $surat->nik_pemohon }}</title>
     <link rel="stylesheet" href="{{ public_path('css/surat.css') }}">
 </head>
 <body>
-<div class="header">
+    <div class="header">
         <img src="{{ public_path('images/logo.png') }}" alt="Logo Kabupaten {{ config('desa.nama_kabupaten') }}" class="logo">
         <div class="header-text">
             <h2>PEMERINTAH KABUPATEN {{ strtoupper(config('desa.nama_kabupaten')) }}</h2>
@@ -18,7 +18,7 @@
     </div>
     <div class="line"></div>
     
-    <div class="title">SURAT KETERANGAN</div>
+    <div class="title">SURAT KETERANGAN USAHA</div>
     <p class="nomor">Nomor: {{ $surat->nomor_surat }}</p>
 
     <div class="main-content">
@@ -55,17 +55,17 @@
             <tr>
                 <td>Tempat, Tanggal Lahir</td>
                 <td>:</td>
-                <td>{{ optional($surat->pemohon)->tempat_lahir ?? 'Kota' }}, {{ optional($surat->pemohon)->tanggal_lahir ? \Carbon\Carbon::parse($surat->pemohon->tanggal_lahir)->locale('id')->isoFormat('D MMMM YYYY') : '.... ................... 20...' }}</td>
+                <td>{{ optional($surat->pemohon)->tempat_lahir ?? '....................' }}, {{ optional($surat->pemohon)->tanggal_lahir ? \Carbon\Carbon::parse($surat->pemohon->tanggal_lahir)->locale('id')->isoFormat('D MMMM YYYY') : '.... ................... 20...' }}</td>
+            </tr>
+            <tr>
+                <td>Kewarganegaraan/Agama</td>
+                <td>:</td>
+                <td> {{ optional($surat->pemohon)->kewarganegaraan ?? '..................................................' }} / {{ optional($surat->pemohon)->agama ?? '..................................................' }}</td>
             </tr>
             <tr>
                 <td>Status Perkawinan</td>
                 <td>:</td>
                 <td>{{ optional($surat->pemohon)->status_perkawinan ?? '..................................................' }}</td>
-            </tr>
-            <tr>
-                <td>Agama</td>
-                <td>:</td>
-                <td>{{ optional($surat->pemohon)->agama ?? '..................................................' }}</td>
             </tr>
             <tr>
                 <td>Pekerjaan</td>
@@ -76,17 +76,59 @@
                 <td style="vertical-align: top;">Alamat</td>
                 <td style="vertical-align: top;">:</td>
                 <td>
-                    RT. {{ optional($surat->pemohon)->rt ?? '00' }} RW. {{ optional($surat->pemohon)->rw ?? '00' }} <br>
+                    RT. {{ optional($surat->pemohon)->rt ?? '00' }} RW. {{ optional($surat->pemohon)->rw ?? '00' }}<br>
                     Desa {{ optional($surat->pemohon)->desa_kelurahan ?? config('desa.nama_desa') ?? '....................' }} Kecamatan {{ optional($surat->pemohon)->kecamatan ?? config('desa.nama_kecamatan') ?? '....................' }}
                 </td>
             </tr>
         </table>
 
-        <p>Orang tersebut diatas benar-benar penduduk Desa {{ config('desa.nama_desa') }} Kecamatan {{ config('desa.nama_kecamatan') }} Kabupaten {{ config('desa.nama_kabupaten') }} Provinsi Jawa Barat. {{-- Asumsi Provinsi Jawa Barat --}}</p>
-        <p>Keterangan ini diberikan untuk persyaratan {{ strtolower($surat->keperluan) ?? '..................................................' }}.</p>
-        <p>Demikian Surat Keterangan ini dibuat dengan sebenarnya dan untuk dipergunakan sebagaimana mestinya.</p>
-    </div>
+        <p style="text-align: justify;">Orang tersebut diatas benar-benar penduduk Desa {{ config('desa.nama_desa') }} Kecamatan {{ config('desa.nama_kecamatan') }} Kabupaten {{ config('desa.nama_kabupaten') }} yang mempunyai usaha dengan keterangan sebagai berikut:</p>
 
+        <table class="info-table" style="margin-left: 20px;">
+            <tr>
+                <td>Nama Usaha</td>
+                <td>:</td>
+                <td>{{ $surat->nama_usaha ?? '.........................' }}</td>
+            </tr>
+            <tr>
+                <td>Jenis Usaha</td>
+                <td>:</td>
+                <td>{{ $surat->jenis_usaha ?? '.........................' }}</td>
+            </tr>
+            <tr>
+                <td>Alamat Usaha</td>
+                <td>:</td>
+                <td>{{ $surat->alamat_usaha ?? '.........................' }}</td>
+            </tr>
+            <tr>
+                <td>Status Bangunan Usaha</td>
+                <td>:</td>
+                <td>{{ $surat->status_bangunan_usaha ?? '.........................' }}</td>
+            </tr>
+            <tr>
+                <td>Perkiraan Modal Usaha</td>
+                <td>:</td>
+                <td>Rp. {{ $surat->perkiraan_modal_usaha ? number_format($surat->perkiraan_modal_usaha, 0, ',', '.') : '.........................' }}</td>
+            </tr>
+            <tr>
+                <td>Perkiraan Pendapatan Usaha</td>
+                <td>:</td>
+                <td>Rp. {{ $surat->perkiraan_pendapatan_usaha ? number_format($surat->perkiraan_pendapatan_usaha, 0, ',', '.') : '.........................' }}</td>
+            </tr>
+            <tr>
+                <td>Jumlah Tenaga Kerja</td>
+                <td>:</td>
+                <td>{{ $surat->jumlah_tenaga_kerja ?? '.........................' }} Orang</td>
+            </tr>
+            <tr>
+                <td>Usaha Berdiri Sejak</td>
+                <td>:</td>
+                <td>{{ $surat->sejak_tanggal_usaha ? \Carbon\Carbon::parse($surat->sejak_tanggal_usaha)->locale('id')->isoFormat('D MMMM YYYY') : '.........................' }}</td>
+            </tr>
+        </table>
+
+        <p style="text-align: justify;">Demikian Surat Keterangan ini dibuat dengan sebenarnya dan untuk dipergunakan sebagaimana mestinya.</p>
+    </div>
     <div class="signature-section">
         <table>
             <tr>
@@ -100,7 +142,6 @@
                     @endif
                 </td>
                 <td style="width: 50%;">
-                    
                     <p>{{ config('desa.nama_desa') }}, {{ \Carbon\Carbon::parse(optional($surat)->tanggal_disetujui ?? now())->locale('id')->isoFormat('D MMMM YYYY') }}</p>
                     <p>PEMOHON,</p>
                     <div class="signature-space"></div>

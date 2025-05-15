@@ -97,16 +97,19 @@ class SuratController extends Controller
                  ];
                  break;
             case 'REKOM_KIP':
-            case 'REKOM_KIS': // Gabungkan jika validasinya sama
-            case 'SKTM':      // Gabungkan jika validasinya sama
+            case 'SKTM': 
+                $conditionalRules = [
+                    'penghasilan_perbulan_kepala_keluarga' => 'required|integer|min:0',
+                ];
+                break;
+            case 'KARTU_INDONESIA_PINTAR':      // Gabungkan jika validasinya sama
                 $conditionalRules = [
                     'penghasilan_perbulan_kepala_keluarga' => 'required|integer|min:0',
                     'pekerjaan_kepala_keluarga' => 'required|string|max:255',
                     // Validasi untuk KIP
-                    'nik_penduduk_siswa' => ['required_if:jenis_surat,REKOM_KIP', 'nullable', Rule::exists('penduduk', 'nik')],
-                    'nama_sekolah' => 'required_if:jenis_surat,REKOM_KIP|nullable|string|max:255',
-                    'nisn_siswa' => 'required_if:jenis_surat,REKOM_KIP|nullable|string|digits_between:10,10', // NISN biasanya 10 digit
-                    'kelas_siswa' => 'required_if:jenis_surat,REKOM_KIP|nullable|string|max:50',
+                    'nik_penduduk_siswa' => ['required_if:jenis_surat,KARTU_INDONESIA_PINTAR', 'nullable', Rule::exists('penduduk', 'nik')],
+                    'nama_sekolah' => 'required_if:jenis_surat,KARTU_INDONESIA_PINTAR|nullable|string|max:255',
+                    'nisn_siswa' => 'required_if:jenis_surat,KARTU_INDONESIA_PINTAR|nullable|string|digits_between:10,10', // NISN biasanya 10 digit
                 ];
                 break;
 
@@ -353,7 +356,7 @@ class SuratController extends Controller
             }
 
             // Load view spesifik dengan data surat
-            $pdf = Pdf::loadView($viewName, compact('surat'))->setPaper('a4', 'portrait'); // Tambahkan setPaper('a4', 'portrait')
+            $pdf = Pdf::loadView($viewName, compact('surat'))->setPaper('F4', 'portrait'); // Tambahkan setPaper('F4', 'portrait')
 
             // Buat nama file yang deskriptif
             $filename = 'SURAT_'

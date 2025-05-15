@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Surat Keterangan Domisili - {{ optional($surat->pemohon)->nama ?? $surat->nik_pemohon }}</title>
+    <title>Surat Keterangan Tidak Mampu - {{ optional($surat->pemohon)->nama ?? $surat->nik_pemohon }}</title>
     <link rel="stylesheet" href="{{ public_path('css/surat.css') }}">
 </head>
 <body>
@@ -11,14 +11,14 @@
         <img src="{{ public_path('images/logo.png') }}" alt="Logo Kabupaten {{ config('desa.nama_kabupaten') }}" class="logo">
         <div class="header-text">
             <h2>PEMERINTAH KABUPATEN {{ strtoupper(config('desa.nama_kabupaten')) }}</h2>
-            <h3>KECAMATAN {{ strtoupper(config('desa.nama_kecamatan')) }}</h3>
+            <h3>KECAMATAN {{ strtoupper(config('desa.nama_kecamatan') )}}</h3>
             <h3>DESA {{ strtoupper(config('desa.nama_desa')) }}</h3>
             <p class="address">{{ config('desa.alamat_desa') }}</p>
         </div>
     </div>
     <div class="line"></div>
     
-    <div class="title">SURAT KETERANGAN</div>
+    <div class="title">SURAT KETERANGAN TIDAK MAMPU</div>
     <p class="nomor">Nomor: {{ $surat->nomor_surat }}</p>
 
     <div class="main-content">
@@ -27,13 +27,13 @@
             <tr>
                 <td>Nama</td>
                 <td>:</td>
-                <td>{{ config('desa.nama_pejabat_ttd') ?? (config('desa.nama_kepala_desa') ?? '..................................................') }}</td>
+                <td>{{ config('desa.nama_kepala_desa') ?? '...................................................' }}</td>
             </tr>
             <tr>
                 <td style="vertical-align: top;">Jabatan</td>
                 <td style="vertical-align: top;">:</td>
                 <td>
-                    {{ config('desa.jabatan_ttd') ?? (config('desa.jabatan_kepala') ?? 'Kepala Desa') }} {{ config('desa.nama_desa') ?? '....................' }}<br>
+                    Kepala Desa {{ config('desa.nama_desa') ?? '....................' }}<br>
                     Kecamatan {{ config('desa.nama_kecamatan') ?? '....................' }} Kabupaten {{ config('desa.nama_kabupaten') ?? '....................' }}<br>
                     Provinsi {{ config('desa.nama_provinsi') ?? '....................' }}
                 </td>
@@ -55,22 +55,17 @@
             <tr>
                 <td>Tempat, Tanggal Lahir</td>
                 <td>:</td>
-                <td>{{ optional($surat->pemohon)->tempat_lahir ?? 'Kota' }}, {{ optional($surat->pemohon)->tanggal_lahir ? \Carbon\Carbon::parse($surat->pemohon->tanggal_lahir)->locale('id')->isoFormat('D MMMM YYYY') : '.... ................... 20...' }}</td>
+                <td>{{ optional($surat->pemohon)->tempat_lahir ?? '...........' }}, {{ optional($surat->pemohon)->tanggal_lahir ? \Carbon\Carbon::parse($surat->pemohon->tanggal_lahir)->locale('id')->isoFormat('D MMMM YYYY') : '.... ................... 20...' }}</td>
+            </tr>
+            <tr>
+                <td>Jenis Kelamin</td>
+                <td>:</td>
+                <td>{{ optional($surat->pemohon)->jenis_kelamin ?? '..................................................' }}</td>
             </tr>
             <tr>
                 <td>Status Perkawinan</td>
                 <td>:</td>
                 <td>{{ optional($surat->pemohon)->status_perkawinan ?? '..................................................' }}</td>
-            </tr>
-            <tr>
-                <td>Agama</td>
-                <td>:</td>
-                <td>{{ optional($surat->pemohon)->agama ?? '..................................................' }}</td>
-            </tr>
-            <tr>
-                <td>Pekerjaan</td>
-                <td>:</td>
-                <td>{{ optional($surat->pemohon)->pekerjaan ?? '..................................................' }}</td>
             </tr>
             <tr>
                 <td style="vertical-align: top;">Alamat</td>
@@ -80,10 +75,20 @@
                     Desa {{ optional($surat->pemohon)->desa_kelurahan ?? config('desa.nama_desa') ?? '....................' }} Kecamatan {{ optional($surat->pemohon)->kecamatan ?? config('desa.nama_kecamatan') ?? '....................' }}
                 </td>
             </tr>
+            <tr>
+                <td>Pekerjaan</td>
+                <td>:</td>
+                <td>{{ optional($surat->pemohon)->pekerjaan ?? '..................................................' }}</td>
+            </tr>
+            <tr>
+                <td>Penghasilan Perbulan</td>
+                <td>:</td>
+                <td>Rp. {{ number_format($surat->penghasilan_perbulan_kepala_keluarga ?? 0, 0, ',', '.') }},-</td>
+            </tr>
         </table>
 
-        <p>Orang tersebut diatas benar-benar penduduk Desa {{ config('desa.nama_desa') }} Kecamatan {{ config('desa.nama_kecamatan') }} Kabupaten {{ config('desa.nama_kabupaten') }} Provinsi Jawa Barat. {{-- Asumsi Provinsi Jawa Barat --}}</p>
-        <p>Keterangan ini diberikan untuk persyaratan {{ strtolower($surat->keperluan) ?? '..................................................' }}.</p>
+        <p>Orang tersebut diatas benar-benar penduduk Desa {{ config('desa.nama_desa') }} Kecamatan {{ config('desa.nama_kecamatan') }} Kabupaten {{ config('desa.nama_kabupaten') }} Provinsi {{ config('desa.nama_provinsi') }} yang menurut sepengetahuan kami orang tersebut termasuk dalam kategori Masyarakat Tidak Mampu (Miskin). Keterangan ini diberikan untuk keperluan {{ strtolower($surat->keperluan) ?? '..................................................' }}.</p>
+        <p>&nbsp;</p>
         <p>Demikian Surat Keterangan ini dibuat dengan sebenarnya dan untuk dipergunakan sebagaimana mestinya.</p>
     </div>
 
@@ -92,15 +97,11 @@
             <tr>
                 <td style="width: 50%;">
                     <p>&nbsp;</p>
-                    <p>{{ strtoupper(config('desa.jabatan_ttd') ?? config('desa.jabatan_kepala')) }} {{ strtoupper(config('desa.nama_desa')) }}</p>
+                    <p>KEPALA DESA {{ strtoupper(config('desa.nama_desa')) }}</p>
                     <div class="signature-space"></div>
-                    <p class="nama-pejabat">{{ config('desa.nama_pejabat_ttd') ?? config('desa.nama_kepala_desa') }}</p>
-                    @if(config('desa.nip_pejabat_ttd'))
-                    <p>NIP. {{ config('desa.nip_pejabat_ttd') }}</p>
-                    @endif
+                    <p class="nama-pejabat">{{ config('desa.nama_kepala_desa') }}</p>
                 </td>
                 <td style="width: 50%;">
-                    
                     <p>{{ config('desa.nama_desa') }}, {{ \Carbon\Carbon::parse(optional($surat)->tanggal_disetujui ?? now())->locale('id')->isoFormat('D MMMM YYYY') }}</p>
                     <p>PEMOHON,</p>
                     <div class="signature-space"></div>

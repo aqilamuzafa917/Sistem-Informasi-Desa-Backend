@@ -1,0 +1,113 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 15px;
+    line-height: 1.5;
+    font-size: 12px;
+    padding: 0;
+}
+.header {
+    text-align: center;
+    margin-bottom: 5px;
+    position: relative;
+}
+.logo {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 70px;
+    height: auto;
+}
+.header-text {
+    margin: 0 auto;
+    padding: 0 80px;
+}
+.header h2, .header h3, .header h4 {
+    margin: 0;
+    font-weight: bold;
+    line-height: 1.2;
+}
+.header h2 {
+    font-size: 16px;
+    margin-bottom: 2px;
+}
+.header h3 {
+    font-size: 14px;
+    margin-bottom: 1px;
+}
+.header h4 {
+    font-size: 14px;
+}
+.address {
+    font-size: 10px;
+    margin-top: 2px;
+}
+.line {
+    border-bottom: 2px solid black;
+    margin-top: 3px;
+    margin-bottom: 10px;
+}
+.title {
+    text-align: center;
+    text-decoration: underline;
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 1px;
+}
+.nomor {
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 12px;
+}
+.main-content p {
+    margin: 5px 0;
+    text-align: justify;
+}
+
+/* Mengatur spacing konten utama */
+.main-content {
+    margin: 10px 0;
+}
+
+/* Mengatur spacing paragraf */
+p {
+    margin: 5px 0;
+}
+.info-table {
+    margin-left: 10px !important;
+    margin-bottom: 10px;
+    font-size: 12px;
+    width: 100%;
+}
+.info-table td {
+    padding: 1px 0;
+    vertical-align: top;
+    line-height: 1.5;
+}
+.info-table td:nth-child(1) {
+    width: 160px;
+}
+.info-table td:nth-child(2) {
+    width: 15px;
+    text-align: center;
+}
+.signature-section {
+    margin-top: 20px;
+}
+.signature-section table {
+    width: 100%;
+}
+.signature-section td {
+    text-align: center;
+    vertical-align: top;
+    font-size: 12px;
+    padding: 0;
+}
+.signature-space {
+    height: 60px;
+}
+.nama-pejabat {
+    font-weight: bold;
+    text-decoration: underline;
+    margin: 0;
+}

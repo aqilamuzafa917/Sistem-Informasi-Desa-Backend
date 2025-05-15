@@ -584,7 +584,7 @@ class Surat extends Model
                  return '401';
 
             // --- Ekonomi & Administrasi Desa (500, 140) ---
-            case 'SK_USAHA': return '145'; // Atau 500/510 jika lebih sesuai
+            case 'SK_USAHA': return '581'; // Atau 500/510 jika lebih sesuai
 
             // --- Umum ---
             case 'LAIN_LAIN':
