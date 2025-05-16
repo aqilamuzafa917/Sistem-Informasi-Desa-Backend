@@ -79,8 +79,7 @@ class SuratController extends Controller
                      'panjang_bayi_cm' => 'required|numeric|min:0',
                      'nik_penduduk_ibu' => ['required', 'string', 'digits:16', Rule::exists('penduduk', 'nik')],
                      'nik_penduduk_ayah' => ['nullable', 'string', 'digits:16', Rule::exists('penduduk', 'nik')],
-                     'nik_penduduk_pelapor_lahir' => ['required', 'string', 'digits:16', Rule::exists('penduduk', 'nik')],
-                     'hubungan_pelapor_lahir' => 'required|string|max:100',
+    
                 ];
                 break;
 
@@ -203,7 +202,6 @@ class SuratController extends Controller
                 'pendudukMeninggal',
                 'ibuBayi',
                 'ayahBayi',
-                'pelaporKelahiran',
                 'siswa'
              ])->find($id); // Gunakan find agar null jika tidak ketemu
 
@@ -328,7 +326,6 @@ class SuratController extends Controller
                         'pendudukMeninggal',
                         'ibuBayi',
                         'ayahBayi',
-                        'pelaporKelahiran',
                         'siswa'
                     ])->findOrFail($id); // Otomatis 404 jika tidak ada
 

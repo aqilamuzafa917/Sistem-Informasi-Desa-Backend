@@ -44,7 +44,7 @@ class Surat extends Model
         'waktu_kematian',
         'tempat_kematian',
         'penyebab_kematian',
-        'hubungan_pelapor_kematian',
+
         
         // SK Pindah
         'alamat_tujuan',
@@ -71,9 +71,12 @@ class Surat extends Model
         'berat_bayi_kg',
         'panjang_bayi_cm',
         'nik_penduduk_ibu',
+        'nama_ibu',
+        'umur_ibu_saat_kelahiran', 
         'nik_penduduk_ayah',
-        'nik_penduduk_pelapor_lahir',
-        'hubungan_pelapor_lahir',
+        'nama_ayah', 
+        'umur_ayah_saat_kelahiran',
+
         
         // SK Usaha
         'nama_usaha',
@@ -129,6 +132,8 @@ class Surat extends Model
         'penghasilan_perbulan_kepala_keluarga' => 'integer',
         'pekerjaan_kepala_keluarga' => 'string',
         'anak_ke' => 'integer',
+        'umur_ibu_saat_kelahiran' => 'integer', // Tambahkan ini
+        'umur_ayah_saat_kelahiran' => 'integer', // Tambahkan ini
     ];
  
     protected $hidden = [
@@ -137,10 +142,7 @@ class Surat extends Model
         'pendudukMeninggal',
         'ibuBayi',
         'ayahBayi',
-        'pelaporKelahiran',
         'siswa',
-
-        
     ];
 
     /**
@@ -152,6 +154,7 @@ class Surat extends Model
         // Data terkait Pemohon (dari nik_pemohon)
         'nama_pemohon',
         'tempat_lahir_pemohon',
+        'status_perkawinan_pemohon',
         'tanggal_lahir_pemohon',
         'jenis_kelamin_pemohon',
         'alamat_pemohon',
@@ -166,12 +169,11 @@ class Surat extends Model
         'nik_meninggal', // Jika Anda ingin NIK ini juga di-append
         'hari_kematian', // Tambahkan ini
 
-        // Data terkait Kelahiran (dari nik_penduduk_ibu, nik_penduduk_ayah, nik_penduduk_pelapor_lahir)
+        // Data terkait Kelahiran (dari nik_penduduk_ibu, nik_penduduk_ayah,)
         'nama_ibu',
         'umur_ibu_saat_kelahiran',
         'nama_ayah',
         'umur_ayah_saat_kelahiran',
-        'nama_pelapor_kelahiran',
 
         // Data terkait Siswa (dari nik_penduduk_siswa untuk Rekom KIP/KIS/SKTM)
         'nama_siswa',
@@ -179,6 +181,7 @@ class Surat extends Model
         'tanggal_lahir_siswa',
         'jenis_kelamin_siswa',
         'umur_siswa',
+        
     ];
 
     //===========================================================================
@@ -218,14 +221,8 @@ class Surat extends Model
     }
 
     /**
-     * Relasi ke data pelapor kelahiran (untuk SK Kelahiran)
-     */
-    public function pelaporKelahiran(): BelongsTo
-    {
-        return $this->belongsTo(Penduduk::class, 'nik_penduduk_pelapor_lahir', 'nik');
-    }
-
-    /**
+  
+   
      * Relasi ke data siswa (untuk Rekom KIP)
      */
     public function siswa(): BelongsTo
@@ -308,6 +305,15 @@ class Surat extends Model
         
         if (isset($this->attributes['tanggal_lahir_pemohon'])) {
             return Carbon::parse($this->attributes['tanggal_lahir_pemohon'])->age;
+        }
+        
+        return null;
+    }
+    
+    public function getStatusPerkawinanPemohonAttribute()
+    {
+        if ($this->pemohon) {
+            return $this->pemohon->status_perkawinan;
         }
         
         return null;
@@ -483,70 +489,75 @@ class Surat extends Model
     //===========================================================================
     
     /**
-     * Mengambil nama ibu dari relasi
+     * Mengambil nama ibu dari relasi atau atribut langsung.
      */
     public function getNamaIbuAttribute()
     {
         if ($this->ibuBayi) {
             return $this->ibuBayi->nama;
         }
-        
-        return null;
+        // Fallback ke atribut 'nama_ibu' jika relasi tidak ada atau tidak di-load
+        return $this->attributes['nama_ibu'] ?? null;
     }
 
     /**
-     * Mengambil umur ibu saat kelahiran
+     * Mengambil umur ibu saat kelahiran, prioritaskan atribut langsung jika ada.
      */
     public function getUmurIbuSaatKelahiranAttribute()
     {
-        if (!isset($this->attributes['tanggal_lahir_bayi'])) return null;
+        // Prioritaskan nilai dari atribut jika sudah diisi (misalnya dari input manual)
+        if (isset($this->attributes['umur_ibu_saat_kelahiran']) && $this->attributes['umur_ibu_saat_kelahiran'] !== null) {
+            return (int) $this->attributes['umur_ibu_saat_kelahiran'];
+        }
         
-        if ($this->ibuBayi) {
-            return Carbon::parse($this->ibuBayi->tanggal_lahir)
-                ->diffInYears(Carbon::parse($this->tanggal_lahir_bayi));
+        // Jika tidak ada nilai di atribut, coba hitung dari relasi
+        if ($this->ibuBayi && isset($this->attributes['tanggal_lahir_bayi'])) {
+            // Pastikan tanggal lahir ibu ada di relasi
+            if ($this->ibuBayi->tanggal_lahir) {
+                 return Carbon::parse($this->ibuBayi->tanggal_lahir)
+                    ->diffInYears(Carbon::parse($this->attributes['tanggal_lahir_bayi']));
+            }
         }
         
         return null;
     }
 
     /**
-     * Mengambil nama ayah dari relasi
+     * Mengambil nama ayah dari relasi atau atribut langsung.
      */
     public function getNamaAyahAttribute()
     {
         if ($this->ayahBayi) {
             return $this->ayahBayi->nama;
         }
-        
-        return null;
+        // Fallback ke atribut 'nama_ayah' jika relasi tidak ada atau tidak di-load
+        return $this->attributes['nama_ayah'] ?? null;
     }
 
     /**
-     * Mengambil umur ayah saat kelahiran
+     * Mengambil umur ayah saat kelahiran, prioritaskan atribut langsung jika ada.
      */
     public function getUmurAyahSaatKelahiranAttribute()
     {
-        if (!isset($this->attributes['tanggal_lahir_bayi'])) return null;
-        
-        if ($this->ayahBayi) {
-            return Carbon::parse($this->ayahBayi->tanggal_lahir)
-                ->diffInYears(Carbon::parse($this->tanggal_lahir_bayi));
+        // Prioritaskan nilai dari atribut jika sudah diisi
+        if (isset($this->attributes['umur_ayah_saat_kelahiran']) && $this->attributes['umur_ayah_saat_kelahiran'] !== null) {
+            return (int) $this->attributes['umur_ayah_saat_kelahiran'];
+        }
+
+        // Jika tidak ada nilai di atribut, coba hitung dari relasi
+        if ($this->ayahBayi && isset($this->attributes['tanggal_lahir_bayi'])) {
+            // Pastikan tanggal lahir ayah ada di relasi
+            if ($this->ayahBayi->tanggal_lahir) {
+                return Carbon::parse($this->ayahBayi->tanggal_lahir)
+                    ->diffInYears(Carbon::parse($this->attributes['tanggal_lahir_bayi']));
+            }
         }
         
         return null;
     }
 
-    /**
-     * Mengambil nama pelapor kelahiran dari relasi
-     */
-    public function getNamaPelaporKelahiranAttribute()
-    {
-        if ($this->pelaporKelahiran) {
-            return $this->pelaporKelahiran->nama;
-        }
-        
-        return null;
-    }
+
+   
 
     //===========================================================================
     // MUTATORS & UTILITY METHODS 
@@ -759,7 +770,6 @@ class Surat extends Model
             $this->save();
             return true;
         }
-        
         return false;
     }
 
@@ -866,5 +876,32 @@ class Surat extends Model
     public function scopeBelumDiproses($query)
     {
         return $query->where('status_surat', 'Diajukan');
+    }
+
+
+    /**
+     * Mutator untuk mengatur data pengikut pindah
+     */
+    public function setDataPengikutPindahAttribute($value)
+    {
+        if (is_array($value)) {
+            // Pastikan setiap pengikut memiliki data lengkap jika NIK tersedia
+            foreach ($value as $key => $pengikut) {
+                if (isset($pengikut['nik']) && !empty($pengikut['nik'])) {
+                    $penduduk = Penduduk::find($pengikut['nik']);
+                    
+                    if ($penduduk) {
+                        // Update data dari tabel penduduk
+                        $value[$key]['nama'] = $penduduk->nama;
+                        $value[$key]['tempat_lahir'] = $penduduk->tempat_lahir;
+                        $value[$key]['tanggal_lahir'] = $penduduk->tanggal_lahir;
+                        $value[$key]['jenis_kelamin'] = $penduduk->jenis_kelamin;
+                        $value[$key]['status_perkawinan'] = $penduduk->status_perkawinan;
+                    }
+                }
+            }
+        }
+        
+        $this->attributes['data_pengikut_pindah'] = is_array($value) ? json_encode($value) : $value;
     }
 }
