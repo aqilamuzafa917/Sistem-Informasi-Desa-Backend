@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SuratController;
 use App\Http\Controllers\ProfilDesaController;
 use App\Http\Controllers\PendudukController;
+use App\Http\Controllers\ArtikelController;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,13 +22,18 @@ Route::post('/login', [AuthController::class, 'login']); // Admin login
 |--------------------------------------------------------------------------
 */
 // Rute GET Profil Desa
-Route::get('/profil', [ProfilDesaController::class, 'index']); // Mengambil semua data profil desa
-Route::get('/profil/{nama_desa}', [ProfilDesaController::class, 'showByName']); // Mengambil data profil desa berdasarkan nama
+Route::get('/publik/profil', [ProfilDesaController::class, 'index']); // Mengambil semua data profil desa
+Route::get('/publik/profil/{nama_desa}', [ProfilDesaController::class, 'showByName']); // Mengambil data profil desa berdasarkan nama
 
 // Rute GET Surat berdasarkan NIK (Publik)
-Route::get('/surat/nik/{nik}', [SuratController::class, 'showByNik']); // Lihat daftar surat berdasarkan NIK pengguna
-Route::get('/surat/pdf/{nik}/{id}', [SuratController::class, 'generatePDF']); // Download PDF surat (jika diinginkan publik)
-Route::post('/surat', [SuratController::class, 'store']);  // Membuat surat baru
+Route::get('/publik/surat/nik/{nik}', [SuratController::class, 'showByNik']); // Lihat daftar surat berdasarkan NIK pengguna
+Route::get('/publik/surat/pdf/{nik}/{id}', [SuratController::class, 'generatePDF']); // Download PDF surat (jika diinginkan publik)
+Route::post('/publik/surat', [SuratController::class, 'store']);  // Membuat surat baru
+
+// Rute Artikel Publik (Tanpa Autentikasi)
+Route::get('/publik/artikel', [ArtikelController::class, 'publicIndex']); // Mendapatkan semua artikel publik
+Route::get('/publik/artikel/{id}', [ArtikelController::class, 'publicShow']); // Mendapatkan detail artikel publik
+Route::post('/publik/artikel', [ArtikelController::class, 'publicStore']); // Membuat artikel warga
 
 
 /*
@@ -43,7 +49,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // CRUD Surat (Admin)
-    
+    Route::post('/surat', [SuratController::class, 'store']);  // Membuat surat baru
     Route::get('/surat', [SuratController::class, 'index']);   // Admin melihat daftar semua surat
     Route::put('/surat/status/{id}', [SuratController::class, 'updateStatus']); //Approve/Reject surat
     //Route::delete('/surat/{id}', [SuratController::class, 'destroy']); // Menghapus surat
@@ -63,4 +69,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/penduduk/{nik}', [PendudukController::class, 'updatePenduduk']); // Admin memperbarui data penduduk
     Route::delete('/penduduk/{nik}', [PendudukController::class, 'deletePenduduk']); // Admin menghapus penduduk
 
+    // Routes untuk API Artikel
+    Route::get('/artikel', [ArtikelController::class, 'index']);
+    Route::post('/artikel', [ArtikelController::class, 'store']);
+    Route::get('/artikel/{id}', [ArtikelController::class, 'show']);
+    Route::put('/artikel/{id}', [ArtikelController::class, 'update']);
+    Route::delete('/artikel/{id}', [ArtikelController::class, 'destroy']);
+    Route::put('/artikel/status/{id}', [ArtikelController::class, 'updateStatus']);
 });

@@ -75,21 +75,21 @@ p {
 }
 .info-table {
     margin-left: 10px !important;
-    margin-bottom: 10px;
+    margin-bottom: 5px;
     font-size: 12px;
     width: 100%;
     border-collapse: collapse;
 }
 .info-table td {
-    padding: 2px 0;
+    padding: 1px 0;
     vertical-align: top;
-    line-height: 1.5;
+    line-height: 1.2;
 }
 .info-table td:nth-child(1) {
-    width: 160px;
+    width: 120px;
 }
 .info-table td:nth-child(2) {
-    width: 15px;
+    width: 10px;
     text-align: center;
 }
 .signature-section {

@@ -141,10 +141,15 @@ class SuratController extends Controller
         // Ambil data yang sudah divalidasi
         $validatedData = $validator->validated();
 
-        // Set status awal
+        // Hapus status_surat dari input jika ada (untuk keamanan)
+        if (isset($request['status_surat'])) {
+            unset($request['status_surat']);
+        }
+
+        // Set status awal - selalu "Diajukan" dan tidak bisa diubah oleh input
         $validatedData['status_surat'] = 'Diajukan'; // Status awal saat diajukan
         $validatedData['tanggal_pengajuan'] = $validatedData['tanggal_pengajuan'] ?? now(); // Isi tanggal request jika tidak ada
-   
+       
         // Nomor surat akan digenerate oleh Model saat event 'creating'
         // Handle file upload jika ada
         if ($request->hasFile('attachment_bukti_pendukung')) {

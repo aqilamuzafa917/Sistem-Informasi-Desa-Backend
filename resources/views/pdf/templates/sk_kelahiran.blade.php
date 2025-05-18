@@ -85,7 +85,7 @@
 
         <p style="text-align: center; font-weight: bold; margin-top: 15px; margin-bottom: 5px;">Anak dari Pasangan Suami Istri:</p>
 
-        <table class="info-table" style="margin-left: 40px;">
+        <table class="info-table" style="margin-left: 20px;">
             <tr>
                 <td style="width: 35%;">Nama Ibu</td>
                 <td style="width: 5%;">:</td>
@@ -116,7 +116,7 @@
                 </td>
             </tr>
         </table>
-        <table class="info-table" style="margin-left: 40px;">
+        <table class="info-table" style="margin-left: 20px;">
             <tr>
                 <td style="width: 35%;">Nama Ayah</td>
                 <td style="width: 5%;">:</td>
@@ -164,9 +164,9 @@
                 <td style="vertical-align: top;">Alamat</td>
                 <td style="vertical-align: top;">:</td>
                 <td>
-                    {{ optional(optional($surat)->pemohon)->alamat ?? '..................................................' }}<br>
-                    RT. {{ optional(optional($surat)->pemohon)->rt ?? '...' }} RW. {{ optional(optional($surat)->pemohon)->rw ?? '...' }} Desa/Kel. {{ optional(optional($surat)->pemohon)->desa_kelurahan ?? '....................' }}<br>
-                    Kec. {{ optional(optional($surat)->pemohon)->kecamatan ?? '....................' }} Kab/Kota. {{ optional(optional($surat)->pemohon)->kabupaten_kota ?? '....................' }}
+                    {{ optional(optional($surat)->pemohon)->alamat ?? '..................................................' }}
+                    <br>RT. {{ optional(optional($surat)->pemohon)->rt ?? '...' }} RW. {{ optional(optional($surat)->pemohon)->rw ?? '...' }} Desa/Kel. {{ optional(optional($surat)->pemohon)->desa_kelurahan ?? '....................' }}
+                    <br>Kec. {{ optional(optional($surat)->pemohon)->kecamatan ?? '....................' }} Kab/Kota. {{ optional(optional($surat)->pemohon)->kabupaten_kota ?? '....................' }}
                 </td>
             </tr>
         </table>
