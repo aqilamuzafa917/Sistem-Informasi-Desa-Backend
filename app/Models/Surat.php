@@ -9,10 +9,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str; // Tambahkan Str
+use Illuminate\Database\Eloquent\SoftDeletes; // Tambahkan SoftDeletes
 
 class Surat extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes; // Tambahkan SoftDeletes trait
 
     /**
      * Tabel yang terkait dengan model.

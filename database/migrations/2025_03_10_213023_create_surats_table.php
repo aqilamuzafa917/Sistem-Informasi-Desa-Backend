@@ -109,6 +109,9 @@ return new class extends Migration
             $table->string('nomor_laporan_polisi')->nullable();
             $table->date('tanggal_laporan_polisi')->nullable();
 
+         
+            $table->softDeletes(); // Menambahkan kolom deleted_at
+            
             // Indeks (opsional, tambahkan jika diperlukan untuk performa query)
             $table->index('jenis_surat');
             $table->index('nik_pemohon');

@@ -30,7 +30,8 @@ class SuratController extends Controller
             'jenis_surat' => 'required|string|max:100', // Jenis surat menentukan validasi lain
             'keperluan' => 'required|string|max:500',
             'tanggal_pengajuan' => 'sometimes|required|date', // Bisa otomatis diisi
-            'attachment_bukti_pendukung' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048', // Contoh validasi file
+            'attachment_bukti_pendukung' => 'nullable|array',
+            'attachment_bukti_pendukung.*' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:10240',
         ];
 
         // --- Validasi Kondisional Berdasarkan Jenis Surat ---
@@ -152,10 +153,25 @@ class SuratController extends Controller
        
         // Nomor surat akan digenerate oleh Model saat event 'creating'
         // Handle file upload jika ada
+        $attachmentFiles = [];
         if ($request->hasFile('attachment_bukti_pendukung')) {
-            // Simpan file dan dapatkan path-nya
-            $path = $request->file('attachment_bukti_pendukung')->store('bukti_pendukung', 'public'); // Simpan di storage/app/public/bukti_pendukung
-            $validatedData['attachment_bukti_pendukung'] = $path;
+            foreach ($request->file('attachment_bukti_pendukung') as $file) {
+                // Simpan file ke storage
+                $path = $file->store('bukti_pendukung', 'public');
+                
+                // Simpan informasi file dengan URL relatif
+                $attachmentFiles[] = [
+                    'path' => $path,
+                    'type' => $file->getClientMimeType(),
+                    'name' => $file->getClientOriginalName(),
+                    'url' => '/storage/' . $path  // Tambahkan URL relatif
+                ];
+            }
+        }
+        
+        // Set attachment_bukti_pendukung ke array file jika ada
+        if (!empty($attachmentFiles)) {
+            $validatedData['attachment_bukti_pendukung'] = $attachmentFiles;
         }
 
 
@@ -256,6 +272,35 @@ class SuratController extends Controller
             $inputData['updated_at'],  // Timestamp otomatis
             $inputData['attachment_bukti_pendukung'] // <-- Tambahkan ini ke unset
         );
+        
+        // Proses upload attachment baru jika ada
+        if ($request->hasFile('attachment_bukti_pendukung')) {
+            // Hapus attachment lama jika ada
+            if (!empty($surat->attachment_bukti_pendukung)) {
+                foreach ($surat->attachment_bukti_pendukung as $attachment) {
+                    if (isset($attachment['path'])) {
+                        Storage::disk('public')->delete($attachment['path']);
+                    }
+                }
+            }
+            
+            // Simpan file baru ke storage
+            $attachmentFiles = [];
+            foreach ($request->file('attachment_bukti_pendukung') as $file) {
+                $path = $file->store('bukti_pendukung', 'public');
+                
+                $attachmentFiles[] = [
+                    'path' => $path,
+                    'type' => $file->getClientMimeType(),
+                    'name' => $file->getClientOriginalName(),
+                    'url' => '/storage/' . $path
+                ];
+            }
+            
+            // Update attachment_bukti_pendukung dengan array baru
+            $surat->attachment_bukti_pendukung = $attachmentFiles;
+        }
+        
         $surat->fill($inputData);
 
         // Simpan perubahan ke database
@@ -266,7 +311,6 @@ class SuratController extends Controller
             // Muat ulang data dari DB untuk memastikan konsistensi + load relasi
             'data' => $surat->fresh()->load('pemohon')
         ]);
-        
     }
 
     /**
@@ -376,6 +420,159 @@ class SuratController extends Controller
             // Log error untuk debugging
             Log::error('Gagal generate PDF: ' . $e->getMessage());
             return response()->json(['message' => 'Terjadi kesalahan saat membuat PDF surat'], 500);
+        }
+    }
+
+    /**
+     * Soft delete surat (hanya menandai sebagai dihapus).
+     * (PUT/PATCH /surat/{id_surat}/delete)
+     */
+    public function softDelete(string $id)
+    {
+        try {
+            $surat = Surat::findOrFail($id);
+            
+            // Cek apakah surat sudah dihapus sebelumnya
+            if ($surat->trashed()) {
+                return response()->json([
+                    'message' => 'Surat sudah dihapus sebelumnya',
+                    'id_surat' => $id
+                ], 422);
+            }
+            
+            $surat->delete(); // Ini akan melakukan soft delete karena model menggunakan SoftDeletes trait
+
+            return response()->json([
+                'message' => 'Surat berhasil dihapus (soft delete)',
+                'id_surat' => $id
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'message' => 'Surat dengan ID tersebut tidak ditemukan',
+                'error' => 'not_found'
+            ], 404);
+        } catch (\Exception $e) {
+            Log::error('Gagal menghapus surat: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Terjadi kesalahan saat menghapus surat',
+                'error' => 'server_error'
+            ], 500);
+        }
+    }
+
+    /**
+     * Menampilkan daftar surat yang telah dihapus (soft deleted).
+     * (GET /surat/trash)
+     */
+    public function trash(Request $request)
+    {
+        try {
+            // Query dasar untuk surat yang sudah di-soft delete
+            $query = Surat::onlyTrashed()->with('pemohon')->latest();
+
+            // Filter berdasarkan status (opsional)
+            if ($request->has('status')) {
+                $query->where('status_surat', $request->input('status'));
+            }
+
+            // Filter berdasarkan jenis surat (opsional)
+            if ($request->has('jenis')) {
+                $query->where('jenis_surat', $request->input('jenis'));
+            }
+
+            // Tambahkan paginasi
+            $surat = $query->paginate(15);
+
+            // Cek apakah ada data
+            if ($surat->isEmpty()) {
+                return response()->json([
+                    'message' => 'Tidak ada surat yang dihapus',
+                    'data' => $surat
+                ]);
+            }
+
+            return response()->json($surat);
+        } catch (\Exception $e) {
+            Log::error('Gagal mengambil daftar surat terhapus: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Terjadi kesalahan saat mengambil daftar surat terhapus',
+                'error' => 'server_error'
+            ], 500);
+        }
+    }
+
+    /**
+     * Mengembalikan surat yang telah dihapus (restore).
+     * (PUT/PATCH /surat/{id_surat}/restore)
+     */
+    public function restore(string $id)
+    {
+        try {
+            $surat = Surat::onlyTrashed()->findOrFail($id);
+            
+            // Cek apakah surat sudah di-restore sebelumnya
+            if (!$surat->trashed()) {
+                return response()->json([
+                    'message' => 'Surat tidak dalam status terhapus',
+                    'id_surat' => $id
+                ], 422);
+            }
+            
+            $surat->restore();
+
+            return response()->json([
+                'message' => 'Surat berhasil dipulihkan',
+                'data' => $surat->fresh()->load('pemohon')
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'message' => 'Surat terhapus dengan ID tersebut tidak ditemukan',
+                'error' => 'not_found'
+            ], 404);
+        } catch (\Exception $e) {
+            Log::error('Gagal memulihkan surat: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Terjadi kesalahan saat memulihkan surat',
+                'error' => 'server_error'
+            ], 500);
+        }
+    }
+    
+    /**
+     * Menghapus surat secara permanen (force delete).
+     * (DELETE /surat/{id_surat}/force)
+     */
+    public function forceDelete(string $id)
+    {
+        try {
+            $surat = Surat::withTrashed()->findOrFail($id);
+            
+            // Hapus attachment jika ada
+            if (!empty($surat->attachment_bukti_pendukung)) {
+                foreach ((array)$surat->attachment_bukti_pendukung as $attachment) {
+                    if (isset($attachment['path'])) {
+                        Storage::disk('public')->delete($attachment['path']);
+                    }
+                }
+            }
+            
+            $surat->forceDelete();
+
+            return response()->json([
+                'message' => 'Surat berhasil dihapus secara permanen',
+                'id_surat' => $id
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'message' => 'Surat dengan ID tersebut tidak ditemukan',
+                'error' => 'not_found'
+            ], 404);
+        } catch (\Exception $e) {
+            Log::error('Gagal menghapus surat secara permanen: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Terjadi kesalahan saat menghapus surat secara permanen',
+                'error' => 'server_error'
+            ], 500);
         }
     }
 }

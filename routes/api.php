@@ -22,12 +22,12 @@ Route::post('/login', [AuthController::class, 'login']); // Admin login
 |--------------------------------------------------------------------------
 */
 // Rute GET Profil Desa
-Route::get('/publik/profil', [ProfilDesaController::class, 'index']); // Mengambil semua data profil desa
-Route::get('/publik/profil/{nama_desa}', [ProfilDesaController::class, 'showByName']); // Mengambil data profil desa berdasarkan nama
+Route::get('/publik/profil-desa', [ProfilDesaController::class, 'index']); // Mengambil semua data profil desa
+Route::get('/publik/profil-desa/{nama_desa}', [ProfilDesaController::class, 'showByName']); // Mengambil data profil desa berdasarkan nama
 
 // Rute GET Surat berdasarkan NIK (Publik)
-Route::get('/publik/surat/nik/{nik}', [SuratController::class, 'showByNik']); // Lihat daftar surat berdasarkan NIK pengguna
-Route::get('/publik/surat/pdf/{nik}/{id}', [SuratController::class, 'generatePDF']); // Download PDF surat (jika diinginkan publik)
+Route::get('/publik/surat/{nik}', [SuratController::class, 'showByNik']); // Lihat daftar surat berdasarkan NIK pengguna
+Route::get('/publik/surat/{nik}/{id}/pdf', [SuratController::class, 'generatePDF']); // Download PDF surat (jika diinginkan publik)
 Route::post('/publik/surat', [SuratController::class, 'store']);  // Membuat surat baru
 
 // Rute Artikel Publik (Tanpa Autentikasi)
@@ -49,23 +49,30 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // CRUD Surat (Admin)
-    Route::post('/surat', [SuratController::class, 'store']);  // Membuat surat baru
     Route::get('/surat', [SuratController::class, 'index']);   // Admin melihat daftar semua surat
-    Route::put('/surat/status/{id}', [SuratController::class, 'updateStatus']); //Approve/Reject surat
-    //Route::delete('/surat/{id}', [SuratController::class, 'destroy']); // Menghapus surat
+    Route::post('/surat', [SuratController::class, 'store']);  // Membuat surat baru
+    
+    // Route spesifik harus ditempatkan SEBELUM route dengan parameter {id}
+    Route::get('/surat/sampah', [SuratController::class, 'trash']); // Melihat daftar surat yang telah dihapus
+    
+    // Route dengan parameter {id}
     Route::get('/surat/{id}', [SuratController::class, 'show']); // Admin melihat detail satu surat by ID
-    // Route::delete('/surat/{id}', [SuratController::class, 'destroy']);
     Route::put('/surat/{id}', [SuratController::class, 'update']); // -- Ini untuk Revisi/Update Data Surat --
-
+    Route::patch('/surat/{id}/status', [SuratController::class, 'updateStatus']); // Approve/Reject surat
+    Route::delete('/surat/{id}', [SuratController::class, 'softDelete']); // Soft delete surat
+    Route::patch('/surat/{id}/restore', [SuratController::class, 'restore']); // Mengembalikan surat yang telah dihapus
+    // Route::delete('/surat/{id}/delete', [SuratController::class, 'forceDelete']); // Hapus surat secara permanen
 
     // CRUD Profil Desa (Admin)
-    Route::post('/profil', [ProfilDesaController::class, 'store']); // Admin menyimpan atau memperbarui profil desa
-    Route::delete('/profil/{nama_desa}', [ProfilDesaController::class, 'destroyByName']); 
+    Route::get('/profil-desa', [ProfilDesaController::class, 'index']);
+    Route::post('/profil-desa', [ProfilDesaController::class, 'store']); // Admin menyimpan atau memperbarui profil desa
+    Route::get('/profil-desa/{nama_desa}', [ProfilDesaController::class, 'showByName']);
+    Route::delete('/profil-desa/{nama_desa}', [ProfilDesaController::class, 'destroyByName']); 
 
     // CRUD Penduduk (Admin)
     Route::get('/penduduk', [PendudukController::class, 'index']); // Admin melihat daftar semua penduduk
-    Route::get('/penduduk/search', [PendudukController::class, 'searchByNik']); // Admin mencari penduduk berdasarkan NIK
-    Route::post('/penduduk/add', [PendudukController::class, 'addPenduduk']); // Admin menambahkan penduduk baru
+    Route::get('/penduduk/cari', [PendudukController::class, 'searchByNik']); // Admin mencari penduduk berdasarkan NIK
+    Route::post('/penduduk', [PendudukController::class, 'addPenduduk']); // Admin menambahkan penduduk baru
     Route::put('/penduduk/{nik}', [PendudukController::class, 'updatePenduduk']); // Admin memperbarui data penduduk
     Route::delete('/penduduk/{nik}', [PendudukController::class, 'deletePenduduk']); // Admin menghapus penduduk
 
@@ -74,6 +81,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/artikel', [ArtikelController::class, 'store']);
     Route::get('/artikel/{id}', [ArtikelController::class, 'show']);
     Route::put('/artikel/{id}', [ArtikelController::class, 'update']);
+    Route::patch('/artikel/{id}/status', [ArtikelController::class, 'updateStatus']);
     Route::delete('/artikel/{id}', [ArtikelController::class, 'destroy']);
-    Route::put('/artikel/status/{id}', [ArtikelController::class, 'updateStatus']);
 });
