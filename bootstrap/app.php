@@ -21,13 +21,17 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->append(\Illuminate\Http\Middleware\HandleCors::class);
-
-        //
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e) {
+            return response()->json(['message' => 'Tidak diizinkan. Token salah.'], 401);
+        });
+
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException $e) {
+            return response()->json(['message' => 'Method tidak diizinkan di route ini.'], 405);
+        });
     })->create();
 
     $app->middleware([
         \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
-    ]);    
+    ]);

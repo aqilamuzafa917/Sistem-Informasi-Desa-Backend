@@ -9,7 +9,6 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    // Register User
     public function register(Request $request)
     {
         $request->validate([
@@ -25,13 +24,12 @@ class AuthController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'User registered successfully',
+            'message' => 'Pendaftaran berhasil',
             'token' => $user->createToken('API Token')->plainTextToken,
             'user' => $user
         ], 201);
     }
 
-    // Login User
     public function login(Request $request)
     {
         $request->validate([
@@ -43,32 +41,30 @@ class AuthController extends Controller
     
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
-                'message' => 'Unauthorized. Invalid email or password.'
+                'message' => 'Tidak diizinkan. Email atau kata sandi tidak valid.'
             ], 401);
         }
     
         return response()->json([
-            'message' => 'Login successful',
+            'message' => 'Login berhasil',
             'token' => $user->createToken('API Token')->plainTextToken,
             'user' => $user
         ], 200);
     }
     
-
-    // Logout User
     public function logout(Request $request)
     {
         $request->user()->tokens()->delete();
 
         return response()->json([
-            'message' => 'Successfully logged out'
+            'message' => 'Berhasil keluar log out'
         ]);
     }
     
     public function user(Request $request)
-{
-    return response()->json([
-        'user' => $request->user()
-    ]);
-}
+    {
+        return response()->json([
+            'user' => $request->user()
+        ]);
+    }
 }
