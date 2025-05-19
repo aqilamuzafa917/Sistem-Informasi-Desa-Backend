@@ -110,6 +110,7 @@ class Surat extends Model
      * Atribut yang harus dikonversi.
      */
     protected $casts = [
+        'attachment_bukti_pendukung' => 'array',
         'tanggal_pengajuan' => 'date',
         'tanggal_disetujui' => 'date',
         // 'tanggal_lahir_pemohon' => 'date',

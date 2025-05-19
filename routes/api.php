@@ -7,6 +7,7 @@ use App\Http\Controllers\SuratController;
 use App\Http\Controllers\ProfilDesaController;
 use App\Http\Controllers\PendudukController;
 use App\Http\Controllers\ArtikelController;
+use App\Http\Controllers\ChatbotController; // Tambahkan ini
 
 /*
 |--------------------------------------------------------------------------
@@ -35,6 +36,9 @@ Route::get('/publik/artikel', [ArtikelController::class, 'publicIndex']); // Men
 Route::get('/publik/artikel/{id}', [ArtikelController::class, 'publicShow']); // Mendapatkan detail artikel publik
 Route::post('/publik/artikel', [ArtikelController::class, 'publicStore']); // Membuat artikel warga
 
+// Rute Chatbot Publik
+Route::post('/publik/chatbot/send', [ChatbotController::class, 'sendMessage']); // Mengirim pesan ke chatbot
+
 
 /*
 |--------------------------------------------------------------------------
@@ -51,6 +55,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // CRUD Surat (Admin)
     Route::get('/surat', [SuratController::class, 'index']);   // Admin melihat daftar semua surat
     Route::post('/surat', [SuratController::class, 'store']);  // Membuat surat baru
+    Route::get('/surat/stats', [SuratController::class, 'getStats']); // API Statistik Surat
     
     // Route spesifik harus ditempatkan SEBELUM route dengan parameter {id}
     Route::get('/surat/sampah', [SuratController::class, 'trash']); // Melihat daftar surat yang telah dihapus
@@ -83,4 +88,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/artikel/{id}', [ArtikelController::class, 'update']);
     Route::patch('/artikel/{id}/status', [ArtikelController::class, 'updateStatus']);
     Route::delete('/artikel/{id}', [ArtikelController::class, 'destroy']);
+
+    // CRUD Chatbot Logs (Admin)
+    Route::get('/chatbot-logs/stats', [ChatbotController::class, 'adminGetStats']); // Mendapatkan statistik penggunaan chatbot
+    Route::get('/chatbot-logs', [ChatbotController::class, 'adminIndexLogs']); // Melihat semua log chatbot
+    Route::get('/chatbot-logs/{id}', [ChatbotController::class, 'adminShowLog']); // Melihat detail satu log chatbot
+    Route::delete('/chatbot-logs/{id}', [ChatbotController::class, 'adminDestroyLog']); // Menghapus log chatbot
+    
 });

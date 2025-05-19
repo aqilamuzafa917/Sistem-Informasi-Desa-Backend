@@ -28,6 +28,7 @@ $config = [
     // 'logo_base64'     => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...' // Alternatif jika menggunakan base64
 
     // Informasi Tambahan (Opsional)
+    'sosial_media'      => 'https://www.instagram.com/kecamatanbatujajarkbb',
     'website_desa'       => 'https://batujajartimur.desa.id', // Jika ada
     'email_desa'         => 'info@batujajartimur.desa.id',   // Jika ada
     'telepon_desa'       => '(022) 68XXXXX',               // Jika ada

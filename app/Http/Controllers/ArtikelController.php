@@ -88,7 +88,7 @@ class ArtikelController extends Controller
                     'path' => $path,
                     'type' => $file->getClientMimeType(),
                     'name' => $file->getClientOriginalName(),
-                    'url' => '/storage/' . $path  // Tambahkan URL relatif
+                    // 'url' => '/storage/' . $path  // Tambahkan URL relatif
                 ];
             }
         }
@@ -407,7 +407,7 @@ class ArtikelController extends Controller
                     'path' => $path,
                     'type' => $file->getClientMimeType(),
                     'name' => $file->getClientOriginalName(),
-                    'url' => '/storage/' . $path  // Tambahkan URL relatif
+                    // 'url' => '/storage/' . $path  // Tambahkan URL relatif
                 ];
             }
         }

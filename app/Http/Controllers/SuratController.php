@@ -12,6 +12,7 @@ use Barryvdh\DomPDF\Facade\Pdf; // Import facade PDF
 use App\Models\Penduduk;      // Asumsi ada model Penduduk
 use Illuminate\Validation\Rule; // Import Rule untuk validasi
 use Illuminate\Support\Facades\Validator; // Import Validator untuk validasi kondisional
+use Illuminate\Support\Facades\DB; // Tambahkan ini jika belum ada
 
 class SuratController extends Controller
 {
@@ -157,23 +158,20 @@ class SuratController extends Controller
         if ($request->hasFile('attachment_bukti_pendukung')) {
             foreach ($request->file('attachment_bukti_pendukung') as $file) {
                 // Simpan file ke storage
-                $path = $file->store('bukti_pendukung', 'public');
+                $path = $file->store('sk/bukti_pendukung', 'public');
                 
-                // Simpan informasi file dengan URL relatif
+                // Simpan informasi file
                 $attachmentFiles[] = [
                     'path' => $path,
                     'type' => $file->getClientMimeType(),
                     'name' => $file->getClientOriginalName(),
-                    'url' => '/storage/' . $path  // Tambahkan URL relatif
+                    // 'url' => '/storage/' . $path  // Tambahkan URL relatif
                 ];
             }
         }
-        
-        // Set attachment_bukti_pendukung ke array file jika ada
-        if (!empty($attachmentFiles)) {
-            $validatedData['attachment_bukti_pendukung'] = $attachmentFiles;
-        }
 
+        // Set attachment_bukti_pendukung ke array file jika ada
+        $validatedData['attachment_bukti_pendukung'] = !empty($attachmentFiles) ? $attachmentFiles : null;
 
         // Buat record surat
         $surat = Surat::create($validatedData);
@@ -273,33 +271,33 @@ class SuratController extends Controller
             $inputData['attachment_bukti_pendukung'] // <-- Tambahkan ini ke unset
         );
         
-        // Proses upload attachment baru jika ada
-        if ($request->hasFile('attachment_bukti_pendukung')) {
-            // Hapus attachment lama jika ada
-            if (!empty($surat->attachment_bukti_pendukung)) {
-                foreach ($surat->attachment_bukti_pendukung as $attachment) {
-                    if (isset($attachment['path'])) {
-                        Storage::disk('public')->delete($attachment['path']);
-                    }
-                }
-            }
+        // // Proses upload attachment baru jika ada
+        // if ($request->hasFile('attachment_bukti_pendukung')) {
+        //     // Hapus attachment lama jika ada
+        //     if (!empty($surat->attachment_bukti_pendukung)) {
+        //         foreach (json_decode($surat->attachment_bukti_pendukung, true) as $attachment) {
+        //             if (isset($attachment['path'])) {
+        //                 Storage::disk('public')->delete($attachment['path']);
+        //             }
+        //         }
+        //     }
             
-            // Simpan file baru ke storage
-            $attachmentFiles = [];
-            foreach ($request->file('attachment_bukti_pendukung') as $file) {
-                $path = $file->store('bukti_pendukung', 'public');
+        //     // Simpan file baru ke storage
+        //     $attachmentFiles = [];
+        //     foreach ($request->file('attachment_bukti_pendukung') as $file) {
+        //         $path = $file->store('bukti_pendukung', 'public');
                 
-                $attachmentFiles[] = [
-                    'path' => $path,
-                    'type' => $file->getClientMimeType(),
-                    'name' => $file->getClientOriginalName(),
-                    'url' => '/storage/' . $path
-                ];
-            }
+        //         $attachmentFiles[] = [
+        //             'path' => $path,
+        //             'type' => $file->getClientMimeType(),
+        //             'name' => $file->getClientOriginalName(),
+        //             'url' => '/storage/' . $path
+        //         ];
+        //     }
             
-            // Update attachment_bukti_pendukung dengan array baru
-            $surat->attachment_bukti_pendukung = $attachmentFiles;
-        }
+        //     // Update attachment_bukti_pendukung dengan array baru
+        //     $surat->attachment_bukti_pendukung = $attachmentFiles;
+        // }
         
         $surat->fill($inputData);
 
@@ -575,4 +573,57 @@ class SuratController extends Controller
             ], 500);
         }
     }
+
+
+/**
+ * Mengembalikan statistik terkait surat.
+ * (GET /surat/stats) - Hanya untuk Admin
+ */
+public function getStats(Request $request)
+{
+    try {
+        $totalSurat = Surat::count();
+        $diajukan = Surat::where('status_surat', 'Diajukan')->count();
+        $disetujui = Surat::where('status_surat', 'Disetujui')->count();
+        $ditolak = Surat::where('status_surat', 'Ditolak')->count(); // Tambahan jika diperlukan
+        $diproses = Surat::where('status_surat', 'Diproses')->count(); // Tambahan jika diperlukan
+    
+        $perJenisSurat = Surat::select('jenis_surat', DB::raw('count(*) as jumlah'))
+                                ->groupBy('jenis_surat')
+                                ->orderBy('jumlah', 'desc')
+                                ->get()
+                                ->map(function ($item) {
+                                    return [
+                                        'jenis_surat' => $item->jenis_surat,
+                                        'jumlah' => $item->jumlah,
+                                    ];
+                                });
+            
+        $suratDihapus = Surat::onlyTrashed()->count();
+    
+        return response()->json([
+            'message' => 'Statistik surat berhasil diambil',
+            'data' => [
+                'total_surat' => $totalSurat,
+                'status_diajukan' => $diajukan,
+                'status_disetujui' => $disetujui,
+                'status_ditolak' => $ditolak,
+                'status_diproses' => $diproses, // Jika Anda memiliki status ini
+                'surat_per_jenis' => $perJenisSurat,
+                'total_surat_dihapus' => $suratDihapus,
+            ]
+        ]);
+    } catch (\Exception $e) {
+        Log::error('Gagal mengambil statistik surat: ' . $e->getMessage());
+        return response()->json([
+            'message' => 'Terjadi kesalahan saat mengambil statistik surat',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
+
+/**
+ * Simpan pengajuan surat baru.
+ * (POST /surat)
+ */
 }
