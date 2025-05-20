@@ -7,7 +7,8 @@ use App\Http\Controllers\SuratController;
 use App\Http\Controllers\ProfilDesaController;
 use App\Http\Controllers\PendudukController;
 use App\Http\Controllers\ArtikelController;
-use App\Http\Controllers\ChatbotController; // Tambahkan ini
+use App\Http\Controllers\ChatbotController;
+use App\Http\Controllers\ApbDesaController; // Tambahkan ini
 
 /*
 |--------------------------------------------------------------------------
@@ -39,6 +40,10 @@ Route::post('/publik/artikel', [ArtikelController::class, 'publicStore']); // Me
 // Rute Chatbot Publik
 Route::post('/publik/chatbot/send', [ChatbotController::class, 'sendMessage']); // Mengirim pesan ke chatbot
 
+// Rute Publik APB Desa
+Route::get('/publik/apbdesa', [ApbDesaController::class, 'getLaporanApbDesa']); // 1 Tahun detail
+Route::get('/publik/apbdesa/multi-tahun', [ApbDesaController::class, 'getLaporanMultiTahun']); // Pendapatan Belanja, tahun ke tahun
+Route::get('/publik/apbdesa/statistik', [ApbDesaController::class, 'getStatistikApbDesa']); // Ringkasan Tahun ke Tahun
 
 /*
 |--------------------------------------------------------------------------
@@ -94,5 +99,21 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/chatbot-logs', [ChatbotController::class, 'adminIndexLogs']); // Melihat semua log chatbot
     Route::get('/chatbot-logs/{id}', [ChatbotController::class, 'adminShowLog']); // Melihat detail satu log chatbot
     Route::delete('/chatbot-logs/{id}', [ChatbotController::class, 'adminDestroyLog']); // Menghapus log chatbot
+
+    // Realisasi Pendapatan
+    Route::get('/pendapatan', [ApbDesaController::class, 'indexPendapatan']);
+    Route::post('/pendapatan', [ApbDesaController::class, 'storePendapatan']);
+    Route::get('/pendapatan/{id}', [ApbDesaController::class, 'showPendapatan']);
+    Route::put('/pendapatan/{id}', [ApbDesaController::class, 'updatePendapatan']);
+    Route::delete('/pendapatan/{id}', [ApbDesaController::class, 'destroyPendapatan']);
     
+    // Realisasi Belanja
+    Route::get('/belanja', [ApbDesaController::class, 'indexBelanja']);
+    Route::post('/belanja', [ApbDesaController::class, 'storeBelanja']);
+    Route::get('/belanja/{id}', [ApbDesaController::class, 'showBelanja']);
+    Route::put('/belanja/{id}', [ApbDesaController::class, 'updateBelanja']);
+    Route::delete('/belanja/{id}', [ApbDesaController::class, 'destroyBelanja']);
+
+    // Total APB Desa
+    Route::get('/apbdesa', [ApbDesaController::class, 'indexTotalApb']);
 });

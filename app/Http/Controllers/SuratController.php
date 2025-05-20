@@ -582,25 +582,32 @@ class SuratController extends Controller
 public function getStats(Request $request)
 {
     try {
+        // Statistik keseluruhan
         $totalSurat = Surat::count();
         $diajukan = Surat::where('status_surat', 'Diajukan')->count();
         $disetujui = Surat::where('status_surat', 'Disetujui')->count();
-        $ditolak = Surat::where('status_surat', 'Ditolak')->count(); // Tambahan jika diperlukan
-        $diproses = Surat::where('status_surat', 'Diproses')->count(); // Tambahan jika diperlukan
-    
-        $perJenisSurat = Surat::select('jenis_surat', DB::raw('count(*) as jumlah'))
-                                ->groupBy('jenis_surat')
-                                ->orderBy('jumlah', 'desc')
-                                ->get()
-                                ->map(function ($item) {
-                                    return [
-                                        'jenis_surat' => $item->jenis_surat,
-                                        'jumlah' => $item->jumlah,
-                                    ];
-                                });
-            
+        $ditolak = Surat::where('status_surat', 'Ditolak')->count();
+
+        // Ambil semua jenis surat yang ada
+        $jenisSurat = Surat::select('jenis_surat')
+                        ->distinct()
+                        ->pluck('jenis_surat');
+
+        // Statistik per jenis surat
+        $statistikPerJenis = [];
+        foreach ($jenisSurat as $jenis) {
+            $statistikPerJenis[] = [
+                'jenis_surat' => $jenis,
+                'jumlah' => Surat::where('jenis_surat', $jenis)->count(),
+                'diajukan' => Surat::where('jenis_surat', $jenis)->where('status_surat', 'Diajukan')->count(),
+                'disetujui' => Surat::where('jenis_surat', $jenis)->where('status_surat', 'Disetujui')->count(),
+                'ditolak' => Surat::where('jenis_surat', $jenis)->where('status_surat', 'Ditolak')->count(),
+            ];
+        }
+
+        // Statistik surat yang dihapus
         $suratDihapus = Surat::onlyTrashed()->count();
-    
+
         return response()->json([
             'message' => 'Statistik surat berhasil diambil',
             'data' => [
@@ -608,8 +615,7 @@ public function getStats(Request $request)
                 'status_diajukan' => $diajukan,
                 'status_disetujui' => $disetujui,
                 'status_ditolak' => $ditolak,
-                'status_diproses' => $diproses, // Jika Anda memiliki status ini
-                'surat_per_jenis' => $perJenisSurat,
+                'surat_per_jenis' => $statistikPerJenis,
                 'total_surat_dihapus' => $suratDihapus,
             ]
         ]);
@@ -621,9 +627,4 @@ public function getStats(Request $request)
         ], 500);
     }
 }
-
-/**
- * Simpan pengajuan surat baru.
- * (POST /surat)
- */
 }
