@@ -45,4 +45,17 @@ class PendudukController extends Controller
         $penduduk->delete();
         return response()->json(null, 204);
     }
+
+    public function getStatistikPenduduk()
+    {
+        $totalPenduduk = Penduduk::count();
+        $totalLakiLaki = Penduduk::where('jenis_kelamin', \App\Enums\JenisKelamin::LakiLaki)->count();
+        $totalPerempuan = Penduduk::where('jenis_kelamin', \App\Enums\JenisKelamin::Perempuan)->count();
+
+        return response()->json([
+            'total_penduduk' => $totalPenduduk,
+            'total_laki_laki' => $totalLakiLaki,
+            'total_perempuan' => $totalPerempuan,
+        ]);
+    }
 }

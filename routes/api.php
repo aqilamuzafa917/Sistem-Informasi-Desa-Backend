@@ -80,15 +80,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/profil-desa/{nama_desa}', [ProfilDesaController::class, 'destroyByName']); 
 
     // CRUD Penduduk (Admin)
+    Route::get('/penduduk/stats', [PendudukController::class, 'getStatistikPenduduk']);
     Route::get('/penduduk', [PendudukController::class, 'index']); // Admin melihat daftar semua penduduk
     Route::get('/penduduk/cari', [PendudukController::class, 'searchByNik']); // Admin mencari penduduk berdasarkan NIK
     Route::post('/penduduk', [PendudukController::class, 'addPenduduk']); // Admin menambahkan penduduk baru
     Route::put('/penduduk/{nik}', [PendudukController::class, 'updatePenduduk']); // Admin memperbarui data penduduk
     Route::delete('/penduduk/{nik}', [PendudukController::class, 'deletePenduduk']); // Admin menghapus penduduk
-
+    
     // Routes untuk API Artikel
     Route::get('/artikel', [ArtikelController::class, 'index']);
     Route::post('/artikel', [ArtikelController::class, 'store']);
+    Route::get('/artikel/stats', [ArtikelController::class, 'getArtikelStats']); // API Statistik Artikel
     Route::get('/artikel/{id}', [ArtikelController::class, 'show']);
     Route::put('/artikel/{id}', [ArtikelController::class, 'update']);
     Route::patch('/artikel/{id}/status', [ArtikelController::class, 'updateStatus']);

@@ -433,4 +433,24 @@ class ArtikelController extends Controller
             'message' => 'Artikel warga berhasil diajukan dan menunggu persetujuan'
         ], 201);
     }
+
+    /**
+     * Mendapatkan statistik artikel.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function getArtikelStats()
+    {
+        $diajukanCount = Artikel::where('status_artikel', 'diajukan')->count();
+        $disetujuiCount = Artikel::where('status_artikel', 'disetujui')->count();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'diajukan' => $diajukanCount,
+                'disetujui' => $disetujuiCount,
+            ],
+            'message' => 'Statistik artikel berhasil diambil'
+        ]);
+    }
 }
