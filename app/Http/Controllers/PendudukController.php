@@ -58,4 +58,17 @@ class PendudukController extends Controller
             'total_perempuan' => $totalPerempuan,
         ]);
     }
+
+    public function searchByNoKK()
+    {
+        $query = trim(request()->input('query'));
+        if (!$query) {
+            return response()->json([]);
+        }
+
+        $penduduk = Penduduk::where('no_kk', 'LIKE', "%$query%")
+            ->get();
+
+        return response()->json($penduduk);
+    }
 }

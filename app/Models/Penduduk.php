@@ -29,6 +29,8 @@ class Penduduk extends Model
         'status_perkawinan',
         'pekerjaan',
         'kewarganegaraan',
+        'pendidikan',
+        'no_kk',
     ];
 
     protected $primaryKey = 'nik';
@@ -53,9 +55,10 @@ class Penduduk extends Model
         'status_perkawinan' => StatusPerkawinan::class,
         'pekerjaan' => 'string',
         'kewarganegaraan' => 'string',
+        'pendidikan' => 'string',
+        'no_kk' => 'string',
     ];
     
-
     public function getTanggalLahirAttribute($value)
     {
         return \Carbon\Carbon::parse($value)->format('d-m-Y');
