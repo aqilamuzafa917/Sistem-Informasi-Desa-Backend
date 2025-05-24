@@ -9,6 +9,7 @@ use App\Http\Controllers\PendudukController;
 use App\Http\Controllers\ArtikelController;
 use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\ApbDesaController; // Tambahkan ini
+use App\Http\Controllers\PengaduanController;
 
 /*
 |--------------------------------------------------------------------------
@@ -43,7 +44,10 @@ Route::post('/publik/chatbot/send', [ChatbotController::class, 'sendMessage']); 
 // Rute Publik APB Desa
 Route::get('/publik/apbdesa', [ApbDesaController::class, 'getLaporanApbDesa']); // 1 Tahun detail
 Route::get('/publik/apbdesa/multi-tahun', [ApbDesaController::class, 'getLaporanMultiTahun']); // Pendapatan Belanja, tahun ke tahun
-Route::get('/publik/apbdesa/statistik', [ApbDesaController::class, 'getStatistikApbDesa']); // Ringkasan Tahun ke Tahun
+Route::get('/publik/apbdesa/statistik', [ApbDesaController::class, 'getStatistikApbDesa']); // Ringkasan Tahun ke Tahun\
+
+// Rute Publik Pengaduan
+Route::post('/publik/pengaduan', [PengaduanController::class, 'store']); // Membuat pengaduan baru
 
 /*
 |--------------------------------------------------------------------------
@@ -118,4 +122,16 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Total APB Desa
     Route::get('/apbdesa', [ApbDesaController::class, 'indexTotalApb']);
+
+    //Routes untuk Pengaduan
+    Route::get('/pengaduan', [PengaduanController::class, 'index']); // Melihat daftar pengaduan
+    Route::get('/pengaduan/{pengaduan}', [PengaduanController::class, 'show']); // Melihat detail pengaduan
+    Route::patch('/pengaduan/{pengaduan}/status', [PengaduanController::class, 'updateStatus']); // Mengupdate status pengaduan
+    Route::delete('/pengaduan/{pengaduan}', [PengaduanController::class, 'destroy']); // Menghapus pengaduan
+    Route::get('/pengaduan/kategori', [PengaduanController::class, 'filterByKategori']); // Filter pengaduan berdasarkan kategori
+    Route::get('/pengaduan/filter', [PengaduanController::class, 'filterByStatus']); // Filter pengaduan berdasarkan status
+
+    // Routes untuk Statistik Pengaduan
+    Route::get('/pengaduan/stats', [PengaduanController::class, 'getStatistikPengaduan']); // Mendapatkan statistik pengaduan
+
 });

@@ -30,6 +30,8 @@ return new class extends Migration
             $table->enum('status_perkawinan', ['Belum Menikah', 'Menikah', 'Cerai Hidup', 'Cerai Mati']);
             $table->string('pekerjaan');
             $table->string('kewarganegaraan', 3)->default('WNI');
+            $table->string('pendidikan');
+            $table->string('no_kk', 16);
         });
     }
 

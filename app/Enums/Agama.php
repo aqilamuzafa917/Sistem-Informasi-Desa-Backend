@@ -23,6 +23,3 @@ enum Agama : string
         };
     }
 }
-{
-    //
-}
