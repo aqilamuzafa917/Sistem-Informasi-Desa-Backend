@@ -496,7 +496,7 @@ class ApbDesaController extends Controller
     public function getLaporanApbDesa(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'tahun' => 'required|digits:4|integer',
+            'tahun' => 'nullable|digits:4|integer',
         ]);
         
         if ($validator->fails()) {
@@ -507,7 +507,7 @@ class ApbDesaController extends Controller
             ], 422);
         }
         
-        $tahun = $request->tahun;
+        $tahun = $request->tahun ?? date('Y');
         
         // Ambil data total APB Desa
         $totalApb = TotalApbDesa::where('tahun_anggaran', $tahun)->first();
@@ -593,146 +593,83 @@ class ApbDesaController extends Controller
         ]);
     }
     
-   
-    
-    // /**
-    //  * Mendapatkan perbandingan APB Desa antara dua tahun
-    //  */
-    // public function getPerbandinganApbDesa(Request $request)
-    // {
-    //     $validator = Validator::make($request->all(), [
-    //         'tahun1' => 'required|digits:4|integer',
-    //         'tahun2' => 'required|digits:4|integer|different:tahun1',
-    //     ]);
+    /**
+     * Mendapatkan laporan APB Desa untuk beberapa tahun
+     */
+    public function getLaporanMultiTahun(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'tahun_awal' => 'nullable|digits:4|integer',
+            'tahun_akhir' => 'nullable|digits:4|integer|gte:tahun_awal',
+        ]);
         
-    //     if ($validator->fails()) {
-    //         return response()->json([
-    //             'status' => 'error',
-    //             'message' => 'Validasi gagal',
-    //             'errors' => $validator->errors()
-    //         ], 422);
-    //     }
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validasi gagal',
+                'errors' => $validator->errors()
+            ], 422);
+        }
         
-    //     $tahun1 = $request->tahun1;
-    //     $tahun2 = $request->tahun2;
+        $query = TotalApbDesa::query();
         
-    //     $apbTahun1 = TotalApbDesa::where('tahun_anggaran', $tahun1)->first();
-    //     $apbTahun2 = TotalApbDesa::where('tahun_anggaran', $tahun2)->first();
+        // Filter berdasarkan rentang tahun jika ada
+        if ($request->filled('tahun_awal') && $request->filled('tahun_akhir')) {
+            $query->whereBetween('tahun_anggaran', [$request->tahun_awal, $request->tahun_akhir]);
+        }
         
-    //     if (!$apbTahun1 || !$apbTahun2) {
-    //         return response()->json([
-    //             'status' => 'error',
-    //             'message' => 'Data APB Desa untuk salah satu atau kedua tahun tidak ditemukan'
-    //         ], 404);
-    //     }
+        $dataApb = $query->orderBy('tahun_anggaran')->get();
         
-    //     // Hitung persentase perubahan
-    //     $persentasePendapatan = $apbTahun1->total_pendapatan > 0 
-    //         ? (($apbTahun2->total_pendapatan - $apbTahun1->total_pendapatan) / $apbTahun1->total_pendapatan) * 100 
-    //         : 0;
+        if ($dataApb->isEmpty()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Data APB Desa tidak ditemukan'
+            ], 404);
+        }
+        
+        // Siapkan data untuk respons
+        $hasilLaporan = [];
+        
+        foreach ($dataApb as $apb) {
+            // Ambil detail pendapatan berdasarkan kategori untuk tahun ini
+            $pendapatanByKategori = RealisasiPendapatan::where('tahun_anggaran', $apb->tahun_anggaran)
+                ->select('kategori', DB::raw('SUM(jumlah) as total'))
+                ->groupBy('kategori')
+                ->get()
+                ->mapWithKeys(function ($item) {
+                    return [$item->kategori => $item->total];
+                });
             
-    //     $persentaseBelanja = $apbTahun1->total_belanja > 0 
-    //         ? (($apbTahun2->total_belanja - $apbTahun1->total_belanja) / $apbTahun1->total_belanja) * 100 
-    //         : 0;
+            // Ambil detail belanja berdasarkan kategori untuk tahun ini
+            $belanjaByKategori = RealisasiBelanja::where('tahun_anggaran', $apb->tahun_anggaran)
+                ->select('kategori', DB::raw('SUM(jumlah) as total'))
+                ->groupBy('kategori')
+                ->get()
+                ->mapWithKeys(function ($item) {
+                    return [$item->kategori => $item->total];
+                });
             
-    //     $persentaseSaldo = $apbTahun1->saldo_sisa != 0 
-    //         ? (($apbTahun2->saldo_sisa - $apbTahun1->saldo_sisa) / abs($apbTahun1->saldo_sisa)) * 100 
-    //         : 0;
+            $hasilLaporan[] = [
+                'tahun_anggaran' => $apb->tahun_anggaran,
+                'total_pendapatan' => $apb->total_pendapatan,
+                'total_belanja' => $apb->total_belanja,
+                'saldo_sisa' => $apb->saldo_sisa,
+                'detail_pendapatan' => [
+                    'Pendapatan Asli Desa' => $pendapatanByKategori['Pendapatan Asli Desa'] ?? 0,
+                    'Pendapatan Transfer' => $pendapatanByKategori['Pendapatan Transfer'] ?? 0,
+                    'Pendapatan Lain-lain' => $pendapatanByKategori['Pendapatan Lain-lain'] ?? 0
+                ],
+                'detail_belanja' => [
+                    'Belanja Barang/Jasa' => $belanjaByKategori['Belanja Barang/Jasa'] ?? 0,
+                    'Belanja Modal' => $belanjaByKategori['Belanja Modal'] ?? 0,
+                    'Belanja Tak Terduga' => $belanjaByKategori['Belanja Tak Terduga'] ?? 0
+                ]
+            ];
+        }
         
-    //     return response()->json([
-    //         'status' => 'success',
-    //         'data' => [
-    //             'tahun1' => [
-    //                 'tahun_anggaran' => $tahun1,
-    //                 'total_pendapatan' => $apbTahun1->total_pendapatan,
-    //                 'total_belanja' => $apbTahun1->total_belanja,
-    //                 'saldo_sisa' => $apbTahun1->saldo_sisa
-    //             ],
-    //             'tahun2' => [
-    //                 'tahun_anggaran' => $tahun2,
-    //                 'total_pendapatan' => $apbTahun2->total_pendapatan,
-    //                 'total_belanja' => $apbTahun2->total_belanja,
-    //                 'saldo_sisa' => $apbTahun2->saldo_sisa
-    //             ],
-    //             'perubahan' => [
-    //                 'pendapatan' => [
-    //                     'nominal' => $apbTahun2->total_pendapatan - $apbTahun1->total_pendapatan,
-    //                     'persentase' => round($persentasePendapatan, 2)
-    //                 ],
-    //                 'belanja' => [
-    //                     'nominal' => $apbTahun2->total_belanja - $apbTahun1->total_belanja,
-    //                     'persentase' => round($persentaseBelanja, 2)
-    //                 ],
-    //                 'saldo' => [
-    //                     'nominal' => $apbTahun2->saldo_sisa - $apbTahun1->saldo_sisa,
-    //                     'persentase' => round($persentaseSaldo, 2)
-    //                 ]
-    //             ]
-    //         ]
-    //     ]);
-    // }
-
-
-/**
- * Mendapatkan laporan APB Desa untuk beberapa tahun
- */
-public function getLaporanMultiTahun(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'tahun_awal' => 'required|digits:4|integer',
-        'tahun_akhir' => 'required|digits:4|integer|gte:tahun_awal',
-    ]);
-    
-    if ($validator->fails()) {
         return response()->json([
-            'status' => 'error',
-            'message' => 'Validasi gagal',
-            'errors' => $validator->errors()
-        ], 422);
+            'status' => 'success',
+            'data' => $hasilLaporan
+        ]);
     }
-    
-    $tahunAwal = $request->tahun_awal;
-    $tahunAkhir = $request->tahun_akhir;
-    
-    // Ambil data total APB Desa untuk rentang tahun yang diminta
-    $dataApb = TotalApbDesa::whereBetween('tahun_anggaran', [$tahunAwal, $tahunAkhir])
-        ->orderBy('tahun_anggaran')
-        ->get();
-    
-    if ($dataApb->isEmpty()) {
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Data APB Desa untuk rentang tahun ' . $tahunAwal . ' - ' . $tahunAkhir . ' tidak ditemukan'
-        ], 404);
-    }
-    
-    // Siapkan data untuk respons
-    $hasilLaporan = [];
-    
-    foreach ($dataApb as $apb) {
-        // Ambil detail pendapatan berdasarkan kategori untuk tahun ini
-        $pendapatanByKategori = RealisasiPendapatan::where('tahun_anggaran', $apb->tahun_anggaran)
-            ->select('kategori', DB::raw('SUM(jumlah) as total'))
-            ->groupBy('kategori')
-            ->get();
-        
-        // Ambil detail belanja berdasarkan kategori untuk tahun ini
-        $belanjaByKategori = RealisasiBelanja::where('tahun_anggaran', $apb->tahun_anggaran)
-            ->select('kategori', DB::raw('SUM(jumlah) as total'))
-            ->groupBy('kategori')
-            ->get();
-        
-        $hasilLaporan[] = [
-            'tahun_anggaran' => $apb->tahun_anggaran,
-            'total_pendapatan' => $apb->total_pendapatan,
-            'total_belanja' => $apb->total_belanja,
-        ];
-    }
-    
-    return response()->json([
-        'status' => 'success',
-        'data' => $hasilLaporan
-    ]);
-}
-
 }

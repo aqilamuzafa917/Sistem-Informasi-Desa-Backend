@@ -29,7 +29,8 @@ class ProfilDesa extends Model
         'misi',
         'peta_lokasi',
         'alamat_kantor',
-        'struktur_organisasi', // Add this line
+        'struktur_organisasi',
+        'batas_wilayah', // Add this line
     ];
 
     /**
@@ -38,6 +39,7 @@ class ProfilDesa extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'struktur_organisasi' => 'array', // Add this line to cast JSON to array and vice versa
+        'struktur_organisasi' => 'array',
+        'batas_wilayah' => 'array', // Add this line to cast GeoJSON/Polygon to array and vice versa
     ];
 }

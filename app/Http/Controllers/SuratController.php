@@ -52,6 +52,7 @@ class SuratController extends Controller
                 break;
             case 'SK_PINDAH':
                 $conditionalRules = [
+                    'no_kk_pemohon' => [ 'nullable','string', 'size:16', Rule::exists('penduduk', 'no_kk')], // Tambahkan ini
                     'alamat_tujuan' => 'required|string|max:255',
                     'rt_tujuan' => 'required|string|max:5',
                     'rw_tujuan' => 'required|string|max:5',
