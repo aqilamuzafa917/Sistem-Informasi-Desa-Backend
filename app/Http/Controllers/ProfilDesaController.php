@@ -26,12 +26,12 @@ class ProfilDesaController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'nama_desa' => 'required|string|max:255|unique:profil_desas,nama_desa,' . ($request->id ?? 'NULL') . ',id',
+            'nama_desa' => 'required|string|unique:profil_desas,nama_desa,' . ($request->id ?? 'NULL') . ',id',
             'sejarah' => 'nullable|string',
             'tradisi_budaya' => 'nullable|string',
             'visi' => 'nullable|string',
             'misi' => 'nullable|string',
-            'peta_lokasi' => 'nullable|string|max:255', // Bisa URL atau path
+            'peta_lokasi' => 'nullable|string', // Bisa URL atau path
             'alamat_kantor' => 'nullable|string',
             'struktur_organisasi' => 'nullable|json',
             'batas_wilayah' => 'nullable|json', // Add validation for JSON (GeoJSON format for polygon)
