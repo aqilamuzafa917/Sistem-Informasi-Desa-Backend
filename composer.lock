@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "fa76d42866dc66e745dfc2ed89d6deca",
+    "content-hash": "13cadcbab71ba6ec71a8edca13b9e590",
     "packages": [
         {
             "name": "barryvdh/laravel-dompdf",
@@ -82,6 +82,62 @@
                 }
             ],
             "time": "2025-02-13T15:07:54+00:00"
+        },
+        {
+            "name": "brick/geo",
+            "version": "0.13.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/brick/geo.git",
+                "reference": "723b6a2f6b97fcb977b2f3cb91a1806dfbef250a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/brick/geo/zipball/723b6a2f6b97fcb977b2f3cb91a1806dfbef250a",
+                "reference": "723b6a2f6b97fcb977b2f3cb91a1806dfbef250a",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.1"
+            },
+            "require-dev": {
+                "brick/reflection": "~0.5.0",
+                "ext-json": "*",
+                "ext-pdo": "*",
+                "ext-sqlite3": "*",
+                "php-coveralls/php-coveralls": "^2.0",
+                "phpunit/phpunit": "^10.0",
+                "vimeo/psalm": "6.8.8"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Brick\\Geo\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "GIS geometry library",
+            "keywords": [
+                "brick",
+                "geo",
+                "geography",
+                "geometry",
+                "gis"
+            ],
+            "support": {
+                "issues": "https://github.com/brick/geo/issues",
+                "source": "https://github.com/brick/geo/tree/0.13.1"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/BenMorel",
+                    "type": "github"
+                }
+            ],
+            "time": "2025-03-20T13:03:31+00:00"
         },
         {
             "name": "brick/math",
@@ -812,6 +868,156 @@
                 }
             ],
             "time": "2023-10-12T05:21:21+00:00"
+        },
+        {
+            "name": "geo-io/crs",
+            "version": "v1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/geo-io/crs.git",
+                "reference": "67b24aa17027548e7ac356d26d3c2537aabeeb22"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/geo-io/crs/zipball/67b24aa17027548e7ac356d26d3c2537aabeeb22",
+                "reference": "67b24aa17027548e7ac356d26d3c2537aabeeb22",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.3"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.0-dev"
+                }
+            },
+            "autoload": {
+                "files": [
+                    "src/functions.php"
+                ],
+                "psr-4": {
+                    "GeoIO\\CRS\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Jan Sorgalla",
+                    "email": "jsorgalla@gmail.com"
+                }
+            ],
+            "description": "Coordinate Reference System (CRS) utilities.",
+            "keywords": [
+                "crs",
+                "geo",
+                "io",
+                "spatial",
+                "srid",
+                "srs"
+            ],
+            "support": {
+                "issues": "https://github.com/geo-io/crs/issues",
+                "source": "https://github.com/geo-io/crs/tree/v1.0.0"
+            },
+            "time": "2016-01-27T07:39:26+00:00"
+        },
+        {
+            "name": "geo-io/geojson",
+            "version": "v1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/geo-io/geojson.git",
+                "reference": "1928e31a9d40eb519d169e1e3edf6ffa06f8e910"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/geo-io/geojson/zipball/1928e31a9d40eb519d169e1e3edf6ffa06f8e910",
+                "reference": "1928e31a9d40eb519d169e1e3edf6ffa06f8e910",
+                "shasum": ""
+            },
+            "require": {
+                "geo-io/crs": "^1.0.0",
+                "geo-io/interface": "^1.0.0",
+                "php": ">=5.3.3"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "GeoIO\\GeoJSON\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Jan Sorgalla",
+                    "email": "jsorgalla@gmail.com"
+                }
+            ],
+            "description": "Geo I/O factory and extractor implementations for GeoJSON.",
+            "keywords": [
+                "geo",
+                "geojson",
+                "geometry",
+                "io",
+                "json"
+            ],
+            "support": {
+                "issues": "https://github.com/geo-io/geojson/issues",
+                "source": "https://github.com/geo-io/geojson/tree/v1.0.0"
+            },
+            "time": "2017-01-24T19:10:36+00:00"
+        },
+        {
+            "name": "geo-io/interface",
+            "version": "v1.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/geo-io/interface.git",
+                "reference": "cf46fe7b013de20ab8b601238c7d91b480810644"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/geo-io/interface/zipball/cf46fe7b013de20ab8b601238c7d91b480810644",
+                "reference": "cf46fe7b013de20ab8b601238c7d91b480810644",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.3"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "GeoIO\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Jan Sorgalla",
+                    "email": "jsorgalla@gmail.com"
+                }
+            ],
+            "description": "Geo I/O base interfaces.",
+            "keywords": [
+                "geo",
+                "geometry",
+                "io"
+            ],
+            "support": {
+                "issues": "https://github.com/geo-io/interface/issues",
+                "source": "https://github.com/geo-io/interface/tree/v1.0.1"
+            },
+            "time": "2016-07-28T07:17:02+00:00"
         },
         {
             "name": "graham-campbell/result-type",
@@ -11283,12 +11489,12 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": [],
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": "^8.2"
     },
-    "platform-dev": {},
+    "platform-dev": [],
     "plugin-api-version": "2.6.0"
 }
