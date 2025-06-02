@@ -95,7 +95,8 @@ class SupabaseService
 
             if ($response->successful()) {
                 Log::info("Successfully got signed URL for: {$filepath}");
-                return $this->supabaseUrl . "/storage/v1" . $response->json()['signedURL'];
+                $url = $this->supabaseUrl . "/storage/v1" . $response->json()['signedURL'];
+                return str_replace(' ', '%', $url);
             }
 
             Log::error("Failed to get signed URL", [
@@ -189,7 +190,8 @@ class SupabaseService
 
             if ($response->successful()) {
                 Log::info("Successfully got signed URL for: {$filepath}");
-                return $this->supabaseUrl . "/storage/v1" . $response->json()['signedURL'];
+                $url = $this->supabaseUrl . "/storage/v1" . $response->json()['signedURL'];
+                return str_replace(' ', '%', $url);
             }
 
             Log::error("Failed to get signed URL", [
