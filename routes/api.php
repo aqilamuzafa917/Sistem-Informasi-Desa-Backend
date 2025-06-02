@@ -10,6 +10,7 @@ use App\Http\Controllers\ArtikelController;
 use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\ApbDesaController; // Tambahkan ini
 use App\Http\Controllers\PengaduanController;
+use App\Http\Controllers\MapController;
 
 /*
 |--------------------------------------------------------------------------
@@ -135,4 +136,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Routes untuk Statistik Pengaduan
     Route::get('/pengaduan/stats', [PengaduanController::class, 'getStatistikPengaduan']); // Mendapatkan statistik pengaduan
 
+    // Routes untuk API Map (POI)
+    Route::get(('map'), [MapController::class, 'getBoundary']); // Mendapatkan data peta
+    Route::get('/map/poi', [MapController::class, 'getPOI']); // Mendapatkan data POI berdasarkan amenity
 });
