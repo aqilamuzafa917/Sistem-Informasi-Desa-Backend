@@ -16,9 +16,9 @@ $config = [
 
     // Informasi Pejabat Penandatangan (Bisa Kepala Desa, Sekdes, dll.)
     // Ini yang akan muncul di bagian TTD
-    'jabatan_ttd'        => 'Jabatan Tandatangan', // Defaultnya Kepala Desa. Bisa diubah menjadi 'SEKRETARIS DESA', 'Plt. KEPALA DESA', atau 'SEKRETARIS DESA a.n KEPALA DESA'
-    'nama_pejabat_ttd'   => 'Nama Pejabat Tandatangan', // Nama yang akan tercetak di bawah TTD
-    'nip_pejabat_ttd'    => '19XXXXXXXXXXXXXXttd', // NIP pejabat penandatangan (jika ada, biarkan kosong '' atau null jika tidak ada)
+    'jabatan_ttd'        => 'Kepala Desa', // Defaultnya Kepala Desa. Bisa diubah menjadi 'SEKRETARIS DESA', 'Plt. KEPALA DESA', atau 'SEKRETARIS DESA a.n KEPALA DESA'
+    'nama_pejabat_ttd'   => 'Nama Pejabat', // Nama yang akan tercetak di bawah TTD
+    'nip_pejabat_ttd'    => '19XXXXXXXXXXXXXX', // NIP pejabat penandatangan (jika ada, biarkan kosong '' atau null jika tidak ada)
 
     // Path Logo
     // Sesuaikan path ini agar bisa diakses oleh library PDF generator Anda.

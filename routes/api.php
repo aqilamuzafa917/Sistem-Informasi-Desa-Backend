@@ -49,7 +49,8 @@ Route::get('/publik/apbdesa/statistik', [ApbDesaController::class, 'getStatistik
 
 // Rute Publik Pengaduan
 Route::post('/publik/pengaduan', [PengaduanController::class, 'store']); // Membuat pengaduan baru
-
+// Route untuk generate PDF APB Desa
+Route::get('/publik/apb-desa/pdf/{tahun?}', [ApbDesaController::class, 'generatePDF']);
 /*
 |--------------------------------------------------------------------------
 | Rute Admin (Membutuhkan Autentikasi - Sanctum) - CRUD Lengkap

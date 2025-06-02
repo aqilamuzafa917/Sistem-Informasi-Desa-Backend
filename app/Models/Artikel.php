@@ -51,7 +51,7 @@ class Artikel extends Model
     protected $casts = [
         'tanggal_kejadian_artikel' => 'date',
         'tanggal_publikasi_artikel' => 'datetime',
-        'media_artikel' => 'array',
+        'media_artikel' => 'json',
         'latitude' => 'float',
         'longitude' => 'float',
     ];

@@ -33,7 +33,8 @@ class ProfilDesaController extends Controller
             'misi' => 'nullable|string',
             'peta_lokasi' => 'nullable|string|max:255', // Bisa URL atau path
             'alamat_kantor' => 'nullable|string',
-            'struktur_organisasi' => 'nullable|json', // Add validation for JSON
+            'struktur_organisasi' => 'nullable|json',
+            'batas_wilayah' => 'nullable|json', // Add validation for JSON (GeoJSON format for polygon)
         ]);
 
         if ($validator->fails()) {

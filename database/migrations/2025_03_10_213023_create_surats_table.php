@@ -30,10 +30,7 @@ return new class extends Migration
             $table->string('catatan')->nullable()->comment('Catatan tambahan untuk petugas');
             $table->timestamps(); // created_at dan updated_at
             // Kolom baru untuk attachment bukti pendukung
-            $table->string('attachment_bukti_pendukung')->nullable()->comment('Path atau nama file attachment');
-
-            // Kolom Spesifik SK Kematian (nullable)
-            $table->string('nik_penduduk_meninggal')->nullable()->comment('NIK penduduk yang meninggal, FK ke tabel penduduk - untuk mengambil nama, tempat/tanggal lahir, dan jenis kelamin dari tabel penduduk');
+            $table->json('attachment_bukti_pendukung')->nullable()->change();
             // Kolom berikut dapat dihapus karena seharusnya diambil dari tabel penduduk berdasarkan NIK
             // Dipertahankan untuk sementara dengan flag nullable dan comment yang jelas
             // $table->string('nama_meninggal')->nullable()->comment('Data sementara: seharusnya diambil dari tabel penduduk berdasarkan nik_penduduk_meninggal');

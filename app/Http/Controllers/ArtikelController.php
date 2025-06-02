@@ -4,12 +4,20 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Artikel;
+use App\Services\SupabaseService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 
 class ArtikelController extends Controller
 {
+    protected $supabaseService;
+
+    public function __construct(SupabaseService $supabaseService)
+    {
+        $this->supabaseService = $supabaseService;
+    }
+
     /**
      * Menampilkan daftar artikel.
      *
@@ -50,7 +58,6 @@ class ArtikelController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    // Di dalam method store
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -64,7 +71,7 @@ class ArtikelController extends Controller
             'longitude' => 'nullable|numeric|between:-180,180',
             'location_name' => 'nullable|string|max:255',
             'media_artikel' => 'nullable|array',
-            'media_artikel.*' => 'nullable|file|mimes:jpeg,png,jpg,gif,mp4,pdf,doc,docx|max:10240',
+            'media_artikel.*' => 'nullable|file|mimes:jpeg,png,jpg,gif,mp4,pdf,doc,docx|max:2048',
         ]);
     
         if ($validator->fails()) {
@@ -75,45 +82,120 @@ class ArtikelController extends Controller
             ], 422);
         }
     
-        // Proses upload media jika ada
-          // Proses upload media jika ada
+        // Proses upload media ke Supabase jika ada
         $mediaFiles = [];
         if ($request->hasFile('media_artikel')) {
-            foreach ($request->file('media_artikel') as $file) {
-                // Simpan file ke storage
-                $path = $file->store('artikel/media', 'public');
-                
-                // Simpan informasi file
-                $mediaFiles[] = [
-                    'path' => $path,
-                    'type' => $file->getClientMimeType(),
-                    'name' => $file->getClientOriginalName(),
-                    // 'url' => '/storage/' . $path  // Tambahkan URL relatif
-                ];
+            Log::info('Starting media upload process', [
+                'file_count' => count($request->file('media_artikel'))
+            ]);
+
+            foreach ($request->file('media_artikel') as $index => $file) {
+                try {
+                    Log::info("Processing file {$index}", [
+                        'original_name' => $file->getClientOriginalName(),
+                        'mime_type' => $file->getClientMimeType(),
+                        'size' => $file->getSize()
+                    ]);
+
+                    // Upload file ke Supabase
+                    $uploadResult = $this->supabaseService->uploadArtikelMedia($file);
+                    
+                    Log::info("File uploaded successfully", [
+                        'path' => $uploadResult['path'] ?? null
+                    ]);
+
+                    // Get signed URL
+                    $signedUrl = $this->supabaseService->getArtikelMediaUrl($uploadResult);
+                    
+                    Log::info("Got signed URL", [
+                        'url' => $signedUrl
+                    ]);
+                    
+                    // Simpan informasi file
+                    $mediaFiles[] = [
+                        'path' => $uploadResult['path'] ?? null,
+                        'type' => $file->getClientMimeType(),
+                        'name' => $file->getClientOriginalName(),
+                        'url' => $signedUrl
+                    ];
+
+                    Log::info("File info added to mediaFiles array", [
+                        'current_count' => count($mediaFiles)
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error("Error uploading file {$index}", [
+                        'error' => $e->getMessage(),
+                        'file' => $file->getClientOriginalName()
+                    ]);
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Gagal mengupload media: ' . $e->getMessage()
+                    ], 500);
+                }
             }
+
+            Log::info('Media upload process completed', [
+                'total_files_processed' => count($mediaFiles)
+            ]);
         }
     
-        // Buat artikel baru
-        // Status dan tanggal publikasi akan diatur otomatis oleh model jika jenis_artikel adalah resmi
-        $artikel = Artikel::create([
-            'jenis_artikel' => $request->jenis_artikel,
-            'judul_artikel' => $request->judul_artikel,
-            'kategori_artikel' => $request->kategori_artikel,
-            'isi_artikel' => $request->isi_artikel,
-            'penulis_artikel' => $request->penulis_artikel,
-            'tanggal_kejadian_artikel' => $request->tanggal_kejadian_artikel,
-            'latitude' => $request->latitude,
-            'longitude' => $request->longitude,
-            'location_name' => $request->location_name,
-            'media_artikel' => !empty($mediaFiles) ? $mediaFiles : null,
-            // Status dan tanggal publikasi akan diatur oleh event model
-        ]);
-    
-        return response()->json([
-            'status' => 'success',
-            'data' => $artikel,
-            'message' => 'Artikel berhasil dibuat'
-        ], 201);
+        try {
+            // Buat artikel baru
+            $artikel = Artikel::create([
+                'jenis_artikel' => $request->jenis_artikel,
+                'judul_artikel' => $request->judul_artikel,
+                'kategori_artikel' => $request->kategori_artikel,
+                'isi_artikel' => $request->isi_artikel,
+                'penulis_artikel' => $request->penulis_artikel,
+                'tanggal_kejadian_artikel' => $request->tanggal_kejadian_artikel,
+                'latitude' => $request->latitude,
+                'longitude' => $request->longitude,
+                'location_name' => $request->location_name,
+                'media_artikel' => !empty($mediaFiles) ? $mediaFiles : null,
+            ]);
+
+            // Log the final response data
+            Log::info('Final response data', [
+                'artikel_id' => $artikel->id_artikel,
+                'media_count' => count($artikel->media_artikel ?? []),
+                'media_files' => $artikel->media_artikel
+            ]);
+
+            // Refresh the model to ensure we have the latest data
+            $artikel->refresh();
+        
+            // Ensure we're returning the complete data
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'jenis_artikel' => $artikel->jenis_artikel,
+                    'judul_artikel' => $artikel->judul_artikel,
+                    'kategori_artikel' => $artikel->kategori_artikel,
+                    'isi_artikel' => $artikel->isi_artikel,
+                    'penulis_artikel' => $artikel->penulis_artikel,
+                    'tanggal_kejadian_artikel' => $artikel->tanggal_kejadian_artikel,
+                    'latitude' => $artikel->latitude,
+                    'longitude' => $artikel->longitude,
+                    'location_name' => $artikel->location_name,
+                    'media_artikel' => $artikel->media_artikel,
+                    'status_artikel' => $artikel->status_artikel,
+                    'tanggal_publikasi_artikel' => $artikel->tanggal_publikasi_artikel,
+                    'updated_at' => $artikel->updated_at,
+                    'created_at' => $artikel->created_at,
+                    'id_artikel' => $artikel->id_artikel
+                ],
+                'message' => 'Artikel berhasil dibuat'
+            ], 201);
+        } catch (\Exception $e) {
+            Log::error('Error creating artikel', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal membuat artikel: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -171,7 +253,7 @@ class ArtikelController extends Controller
             'longitude' => 'nullable|numeric|between:-180,180',
             'location_name' => 'nullable|string|max:255',
             'media_artikel' => 'nullable|array',
-            'media_artikel.*' => 'nullable|file|mimes:jpeg,png,jpg,gif,mp4,pdf,doc,docx|max:10240',
+            'media_artikel.*' => 'nullable|file|mimes:jpeg,png,jpg,gif,mp4,pdf,doc,docx|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -182,23 +264,34 @@ class ArtikelController extends Controller
             ], 422);
         }
 
-        // Proses upload media baru jika ada
+        // Proses upload media baru ke Supabase jika ada
         if ($request->hasFile('media_artikel')) {
             $mediaFiles = [];
             foreach ($request->file('media_artikel') as $file) {
-                $path = $file->store('artikel/media', 'public');
-                $mediaFiles[] = [
-                    'path' => $path,
-                    'type' => $file->getClientMimeType(),
-                    'name' => $file->getClientOriginalName()
-                ];
+                try {
+                    // Upload file ke Supabase
+                    $uploadResult = $this->supabaseService->uploadArtikelMedia($file);
+                    
+                    // Simpan informasi file
+                    $mediaFiles[] = [
+                        'path' => $uploadResult['path'] ?? null,
+                        'type' => $file->getClientMimeType(),
+                        'name' => $file->getClientOriginalName(),
+                        'url' => $this->supabaseService->getArtikelMediaUrl($uploadResult)
+                    ];
+                } catch (\Exception $e) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Gagal mengupload media: ' . $e->getMessage()
+                    ], 500);
+                }
             }
             
             // Hapus media lama jika ada
             if (!empty($artikel->media_artikel)) {
                 foreach ($artikel->media_artikel as $media) {
                     if (isset($media['path'])) {
-                        Storage::disk('public')->delete($media['path']);
+                        $this->supabaseService->deleteArtikelMedia($media['path']);
                     }
                 }
             }
@@ -254,7 +347,7 @@ class ArtikelController extends Controller
         if (!empty($artikel->media_artikel)) {
             foreach ($artikel->media_artikel as $media) {
                 if (isset($media['path'])) {
-                    Storage::disk('public')->delete($media['path']);
+                    $this->supabaseService->deleteArtikelMedia($media['path']);
                 }
             }
         }
@@ -384,7 +477,7 @@ class ArtikelController extends Controller
             'longitude' => 'nullable|numeric|between:-180,180',
             'location_name' => 'nullable|string|max:255',
             'media_artikel' => 'nullable|array',
-            'media_artikel.*' => 'nullable|file|mimes:jpeg,png,jpg,gif,mp4,pdf,doc,docx|max:10240',
+            'media_artikel.*' => 'nullable|file|mimes:jpeg,png,jpg,gif,mp4,pdf,doc,docx|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -395,27 +488,34 @@ class ArtikelController extends Controller
             ], 422);
         }
 
-        // Proses upload media jika ada
+        // Proses upload media ke Supabase jika ada
         $mediaFiles = [];
         if ($request->hasFile('media_artikel')) {
             foreach ($request->file('media_artikel') as $file) {
-                // Simpan file ke storage
-                $path = $file->store('artikel/media', 'public');
-                
-                // Simpan informasi file dengan URL relatif
-                $mediaFiles[] = [
-                    'path' => $path,
-                    'type' => $file->getClientMimeType(),
-                    'name' => $file->getClientOriginalName(),
-                    // 'url' => '/storage/' . $path  // Tambahkan URL relatif
-                ];
+                try {
+                    // Upload file ke Supabase
+                    $uploadResult = $this->supabaseService->uploadArtikelMedia($file);
+                    
+                    // Simpan informasi file
+                    $mediaFiles[] = [
+                        'path' => $uploadResult['path'] ?? null,
+                        'type' => $file->getClientMimeType(),
+                        'name' => $file->getClientOriginalName(),
+                        'url' => $this->supabaseService->getArtikelMediaUrl($uploadResult)
+                    ];
+                } catch (\Exception $e) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Gagal mengupload media: ' . $e->getMessage()
+                    ], 500);
+                }
             }
         }
     
         // Buat artikel baru dengan jenis 'warga' dan status 'diajukan'
         $artikel = Artikel::create([
-            'jenis_artikel' => 'warga', // Tetapkan jenis artikel sebagai 'warga'
-            'status_artikel' => 'diajukan', // Tetapkan status artikel sebagai 'diajukan'
+            'jenis_artikel' => 'warga',
+            'status_artikel' => 'diajukan',
             'judul_artikel' => $request->judul_artikel,
             'kategori_artikel' => $request->kategori_artikel,
             'isi_artikel' => $request->isi_artikel,

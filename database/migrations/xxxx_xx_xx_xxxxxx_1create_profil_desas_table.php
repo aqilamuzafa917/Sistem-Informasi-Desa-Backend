@@ -22,6 +22,8 @@ return new class extends Migration
             $table->text('alamat_kantor')->nullable();
             // Struktur organisasi mungkin lebih kompleks, bisa disimpan sebagai JSON atau relasi tabel lain
             // $table->json('struktur_organisasi')->nullable(); 
+            $table->json('struktur_organisasi')->nullable();
+            $table->json('batas_wilayah')->nullable();
             $table->timestamps();
         });
     }
