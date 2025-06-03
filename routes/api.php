@@ -94,8 +94,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profil-desa', [ProfilDesaController::class, 'index']);
     Route::post('/profil-desa', [ProfilDesaController::class, 'store']); // Admin menyimpan atau memperbarui profil desa
     Route::get('/profil-desa/{id}', [ProfilDesaController::class, 'show']); // Get by ID
-    Route::get('/profil-desa/{id}/nama', [ProfilDesaController::class, 'getNamaDesa']); // Get nama_desa by ID
+    Route::get('/profil-desa/{id}/identitas', [ProfilDesaController::class, 'getNamaDesa']); // Get nama_desa by ID
     Route::patch('/profil-desa/{id}', [ProfilDesaController::class, 'update']); // Update specific fields
+    //Route::patch('/profil-desa/{id}/struktur-organisasi', [ProfilDesaController::class, 'updateStrukturOrganisasi']); // Update struktur_organisasi only
     Route::delete('/profil-desa/{nama_desa}', [ProfilDesaController::class, 'destroyByName']); 
 
     // CRUD Penduduk (Admin)
