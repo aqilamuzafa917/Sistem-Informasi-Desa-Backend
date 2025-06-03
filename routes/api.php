@@ -138,16 +138,17 @@ Route::middleware('auth:sanctum')->group(function () {
     // Total APB Desa
     Route::get('/apbdesa', [ApbDesaController::class, 'indexTotalApb']);
 
+    // Routes untuk Statistik Pengaduan
+    Route::get('/pengaduan/stats', [PengaduanController::class, 'getStatistikPengaduan']); // Mendapatkan statistik pengaduan
+
     //Routes untuk Pengaduan
     Route::get('/pengaduan', [PengaduanController::class, 'index']); // Melihat daftar pengaduan
+    Route::get('/pengaduan/kategori', [PengaduanController::class, 'filterByKategori']); // Filter pengaduan berdasarkan kategori
+    Route::get('/pengaduan/filter', [PengaduanController::class, 'filterByStatus']); // Filter pengaduan berdasarkan status
     Route::get('/pengaduan/{pengaduan}', [PengaduanController::class, 'show']); // Melihat detail pengaduan
     Route::patch('/pengaduan/{pengaduan}/status', [PengaduanController::class, 'updateStatus']); // Mengupdate status pengaduan
     Route::delete('/pengaduan/{pengaduan}', [PengaduanController::class, 'destroy']); // Menghapus pengaduan
-    Route::get('/pengaduan/kategori', [PengaduanController::class, 'filterByKategori']); // Filter pengaduan berdasarkan kategori
-    Route::get('/pengaduan/filter', [PengaduanController::class, 'filterByStatus']); // Filter pengaduan berdasarkan status
 
-    // Routes untuk Statistik Pengaduan
-    Route::get('/pengaduan/stats', [PengaduanController::class, 'getStatistikPengaduan']); // Mendapatkan statistik pengaduan
 
     // Desa Config Routes
     Route::get('/desa-config', [DesaConfigController::class, 'getConfig']);
