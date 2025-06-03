@@ -96,7 +96,7 @@ class SupabaseService
             if ($response->successful()) {
                 Log::info("Successfully got signed URL for: {$filepath}");
                 $url = $this->supabaseUrl . "/storage/v1" . $response->json()['signedURL'];
-                return str_replace(' ', '%', $url);
+                return str_replace(' ', '%20', $url);
             }
 
             Log::error("Failed to get signed URL", [

@@ -26,15 +26,22 @@ class ProfilDesaController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'nama_desa' => 'required|string|unique:profil_desas,nama_desa,' . ($request->id ?? 'NULL') . ',id',
+            'nama_desa' => 'required|string',
             'sejarah' => 'nullable|string',
             'tradisi_budaya' => 'nullable|string',
             'visi' => 'nullable|string',
             'misi' => 'nullable|string',
-            'peta_lokasi' => 'nullable|string', // Bisa URL atau path
+            'peta_lokasi' => 'nullable|string',
             'alamat_kantor' => 'nullable|string',
             'struktur_organisasi' => 'nullable|json',
-            'batas_wilayah' => 'nullable|json', // Add validation for JSON (GeoJSON format for polygon)
+            'batas_wilayah' => 'nullable|array',
+            'batas_wilayah.*' => 'array|size:2',
+            'batas_wilayah.*.0' => 'required|numeric',
+            'batas_wilayah.*.1' => 'required|numeric',
+            'social_media' => 'nullable|array',
+            'social_media.*.platform' => 'required_with:social_media|string|in:instagram,facebook,youtube,twitter,tiktok',
+            'social_media.*.url' => 'required_with:social_media|url',
+            'social_media.*.username' => 'required_with:social_media|string',
         ]);
 
         if ($validator->fails()) {
@@ -105,5 +112,77 @@ class ProfilDesaController extends Controller
         $profil->delete();
 
         return response()->json(['message' => 'Profil desa berhasil dihapus'], 200); // atau 204 No Content
+    }
+
+    /**
+     * Display the specified resource by ID.
+     * (GET /profil-desa/{id} - Public)
+     */
+    public function show(string $id)
+    {
+        $profil = ProfilDesa::find($id);
+        
+        if (!$profil) {
+            return response()->json(['message' => 'Profil desa tidak ditemukan'], 404);
+        }
+
+        return response()->json($profil);
+    }
+
+    /**
+     * Get nama_desa by ID.
+     * (GET /profil-desa/{id}/nama - Public)
+     */
+    public function getNamaDesa(string $id)
+    {
+        $profil = ProfilDesa::find($id);
+        
+        if (!$profil) {
+            return response()->json(['message' => 'Profil desa tidak ditemukan'], 404);
+        }
+
+        return response()->json([
+            'nama_desa' => $profil->nama_desa,
+            'social_media' => $profil->social_media
+        ]);
+    }
+
+    /**
+     * Update specific fields of the specified resource.
+     * (PATCH /profil/{id} - Requires Auth)
+     */
+    public function update(Request $request, string $id)
+    {
+        $profil = ProfilDesa::find($id);
+        if (!$profil) {
+            return response()->json(['message' => 'Profil desa tidak ditemukan'], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'nama_desa' => 'sometimes|required|string',
+            'sejarah' => 'sometimes|nullable|string',
+            'tradisi_budaya' => 'sometimes|nullable|string',
+            'visi' => 'sometimes|nullable|string',
+            'misi' => 'sometimes|nullable|string',
+            'peta_lokasi' => 'sometimes|nullable|string',
+            'alamat_kantor' => 'sometimes|nullable|string',
+            'struktur_organisasi' => 'sometimes|nullable|json',
+            'batas_wilayah' => 'sometimes|nullable|array',
+            'batas_wilayah.*' => 'array|size:2',
+            'batas_wilayah.*.0' => 'required|numeric',
+            'batas_wilayah.*.1' => 'required|numeric',
+            'social_media' => 'sometimes|nullable|array',
+            'social_media.*.platform' => 'required_with:social_media|string|in:instagram,facebook,youtube,twitter,tiktok',
+            'social_media.*.url' => 'required_with:social_media|url',
+            'social_media.*.username' => 'required_with:social_media|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $profil->update($request->all());
+
+        return response()->json($profil, 200);
     }
 }

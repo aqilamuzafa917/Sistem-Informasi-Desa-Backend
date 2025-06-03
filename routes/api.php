@@ -11,6 +11,7 @@ use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\ApbDesaController; // Tambahkan ini
 use App\Http\Controllers\PengaduanController;
 use App\Http\Controllers\MapController;
+use App\Http\Controllers\DesaConfigController;
 
 /*
 |--------------------------------------------------------------------------
@@ -53,6 +54,8 @@ Route::post('/publik/pengaduan', [PengaduanController::class, 'store']); // Memb
 Route::get('/publik/apb-desa/pdf/{tahun?}', [ApbDesaController::class, 'generatePDF']);
 
 Route::get('/publik/profil-desa/{nama_desa}', [ProfilDesaController::class, 'showByName']);
+Route::get('/publik/profil-desa/{id}', [ProfilDesaController::class, 'show']); // Get by ID
+Route::get('/publik/profil-desa/{id}/identitas', [ProfilDesaController::class, 'getNamaDesa']); // Get nama_desa by ID
 /*
 |--------------------------------------------------------------------------
 | Rute Admin (Membutuhkan Autentikasi - Sanctum) - CRUD Lengkap
@@ -84,7 +87,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // CRUD Profil Desa (Admin)
     Route::get('/profil-desa', [ProfilDesaController::class, 'index']);
     Route::post('/profil-desa', [ProfilDesaController::class, 'store']); // Admin menyimpan atau memperbarui profil desa
-    Route::get('/profil-desa/{nama_desa}', [ProfilDesaController::class, 'showByName']);
+    Route::get('/profil-desa/{id}', [ProfilDesaController::class, 'show']); // Get by ID
+    Route::get('/profil-desa/{id}/nama', [ProfilDesaController::class, 'getNamaDesa']); // Get nama_desa by ID
+    Route::patch('/profil-desa/{id}', [ProfilDesaController::class, 'update']); // Update specific fields
     Route::delete('/profil-desa/{nama_desa}', [ProfilDesaController::class, 'destroyByName']); 
 
     // CRUD Penduduk (Admin)
@@ -141,4 +146,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Routes untuk API Map (POI)
     Route::get(('map'), [MapController::class, 'getBoundary']); // Mendapatkan data peta
     Route::get('/map/poi', [MapController::class, 'getPOI']); // Mendapatkan data POI berdasarkan amenity
+
+    // Desa Config Routes
+    Route::get('/desa-config', [DesaConfigController::class, 'getConfig']);
+    Route::put('/desa-config', [DesaConfigController::class, 'updateConfig']);
 });
