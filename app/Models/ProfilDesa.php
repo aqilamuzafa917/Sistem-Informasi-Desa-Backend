@@ -31,7 +31,9 @@ class ProfilDesa extends Model
         'alamat_kantor',
         'struktur_organisasi',
         'batas_wilayah',
-        'social_media'
+        'social_media',
+        'luas_desa',
+        'polygon_desa'
     ];
 
     /**
@@ -40,8 +42,9 @@ class ProfilDesa extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'struktur_organisasi' => 'array',
-        'batas_wilayah' => 'array',
-        'social_media' => 'array'
+        'struktur_organisasi' => 'json',
+        'batas_wilayah' => 'json',
+        'social_media' => 'json',
+        'polygon_desa' => 'json',
     ];
 }

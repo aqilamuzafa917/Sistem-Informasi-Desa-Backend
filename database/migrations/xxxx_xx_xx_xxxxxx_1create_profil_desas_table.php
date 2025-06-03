@@ -20,10 +20,10 @@ return new class extends Migration
             $table->text('misi')->nullable();
             $table->string('peta_lokasi')->nullable(); // Bisa berupa URL gambar peta atau data koordinat
             $table->text('alamat_kantor')->nullable();
-            // Struktur organisasi mungkin lebih kompleks, bisa disimpan sebagai JSON atau relasi tabel lain
-            // $table->json('struktur_organisasi')->nullable(); 
             $table->json('struktur_organisasi')->nullable();
-            $table->json('batas_wilayah')->nullable();
+            $table->json('batas_wilayah')->nullable()->comment('Struktur: {"utara": "string", "timur": "string", "selatan": "string", "barat": "string"}');
+            $table->bigInteger('luas_desa')->nullable()->comment('Luas desa dalam meter persegi');
+            $table->json('social_media')->nullable()->comment('Struktur: [{"platform": "string", "url": "string", "username": "string"}]');
             $table->timestamps();
         });
     }

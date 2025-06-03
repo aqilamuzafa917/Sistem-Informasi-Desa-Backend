@@ -32,7 +32,6 @@ class DesaConfigController extends Controller
             'jabatan_ttd' => 'required|string',
             'nama_pejabat_ttd' => 'required|string',
             'nip_pejabat_ttd' => 'nullable|string',
-            'logo_path' => 'required|string',
             'sosial_media' => 'nullable|string',
             'website_desa' => 'nullable|string',
             'email_desa' => 'nullable|email',
