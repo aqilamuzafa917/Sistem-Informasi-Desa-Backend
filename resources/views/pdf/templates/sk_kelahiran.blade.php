@@ -186,10 +186,10 @@
                     @endif
                 </td>
                 <td style="width: 50%;">
-                    <p>{{ config('desa.nama_desa') }}, {{ \Carbon\Carbon::parse(optional($surat)->tanggal_disetujui ?? now())->locale('id')->isoFormat('D MMMM YYYY') }}</p>
+                    <span>{{ config('desa.nama_desa') }}, {{ \Carbon\Carbon::parse(optional($surat)->tanggal_disetujui ?? now())->locale('id')->isoFormat('D MMMM YYYY') }}</p>
                     <p>PEMOHON,</p>
                     <div class="signature-space"></div>
-                    <p class="nama-pejabat">{{ optional($surat->pemohon)->nama ?? '................................' }}</p>
+                    <p class="nama-pemohon">{{ optional($surat->pemohon)->nama ?? '................................' }}</p>
                 </td>
             </tr>
         </table>

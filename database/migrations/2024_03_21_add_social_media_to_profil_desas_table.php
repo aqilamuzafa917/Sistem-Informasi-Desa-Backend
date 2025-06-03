@@ -12,11 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('profil_desas', function (Blueprint $table) {
-            // Add the new column after 'alamat_kantor' (or adjust as needed)
-            // Use json type if your database supports it (recommended)
-            $table->json('struktur_organisasi')->nullable()->after('alamat_kantor');
-            // Alternatively, use text type if json is not supported:
-            // $table->text('struktur_organisasi')->nullable()->after('alamat_kantor');
+            $table->json('social_media')->nullable()->after('batas_wilayah');
         });
     }
 
@@ -26,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('profil_desas', function (Blueprint $table) {
-            $table->dropColumn('struktur_organisasi');
+            $table->dropColumn('social_media');
         });
     }
-};
+}; 

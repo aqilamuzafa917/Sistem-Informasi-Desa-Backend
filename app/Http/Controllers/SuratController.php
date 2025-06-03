@@ -6,7 +6,7 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Storage;
+use App\Services\SupabaseService;
 use App\Models\Surat;          // Import model Surat
 use Barryvdh\DomPDF\Facade\Pdf; // Import facade PDF
 use App\Models\Penduduk;      // Asumsi ada model Penduduk
@@ -16,6 +16,13 @@ use Illuminate\Support\Facades\DB; // Tambahkan ini jika belum ada
 
 class SuratController extends Controller
 {
+    protected $supabaseService;
+
+    public function __construct(SupabaseService $supabaseService)
+    {
+        $this->supabaseService = $supabaseService;
+    }
+
     /**
      * Simpan pengajuan surat baru.
      * (POST /surat)
@@ -32,7 +39,7 @@ class SuratController extends Controller
             'keperluan' => 'required|string|max:500',
             'tanggal_pengajuan' => 'sometimes|required|date', // Bisa otomatis diisi
             'attachment_bukti_pendukung' => 'nullable|array',
-            'attachment_bukti_pendukung.*' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:10240',
+            'attachment_bukti_pendukung.*' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:2048', // Maksimal 2MB (default PHP)
         ];
 
         // --- Validasi Kondisional Berdasarkan Jenis Surat ---
@@ -52,6 +59,7 @@ class SuratController extends Controller
                 break;
             case 'SK_PINDAH':
                 $conditionalRules = [
+                    'no_kk_pemohon' => [ 'nullable','string', 'size:16', Rule::exists('penduduk', 'no_kk')], // Tambahkan ini
                     'alamat_tujuan' => 'required|string|max:255',
                     'rt_tujuan' => 'required|string|max:5',
                     'rw_tujuan' => 'required|string|max:5',
@@ -152,21 +160,27 @@ class SuratController extends Controller
         $validatedData['status_surat'] = 'Diajukan'; // Status awal saat diajukan
         $validatedData['tanggal_pengajuan'] = $validatedData['tanggal_pengajuan'] ?? now(); // Isi tanggal request jika tidak ada
        
-        // Nomor surat akan digenerate oleh Model saat event 'creating'
-        // Handle file upload jika ada
+        // Handle file upload ke Supabase jika ada
         $attachmentFiles = [];
         if ($request->hasFile('attachment_bukti_pendukung')) {
             foreach ($request->file('attachment_bukti_pendukung') as $file) {
-                // Simpan file ke storage
-                $path = $file->store('sk/bukti_pendukung', 'public');
-                
-                // Simpan informasi file
-                $attachmentFiles[] = [
-                    'path' => $path,
-                    'type' => $file->getClientMimeType(),
-                    'name' => $file->getClientOriginalName(),
-                    // 'url' => '/storage/' . $path  // Tambahkan URL relatif
-                ];
+                try {
+                    // Upload file ke Supabase
+                    $uploadResult = $this->supabaseService->uploadSuratBuktiPendukung($file);
+                    
+                    // Simpan informasi file
+                    $attachmentFiles[] = [
+                        'path' => $uploadResult['path'] ?? null,
+                        'type' => $file->getClientMimeType(),
+                        'name' => $file->getClientOriginalName(),
+                        'url' => $this->supabaseService->getSuratBuktiPendukungUrl($uploadResult)
+                    ];
+                } catch (\Exception $e) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Gagal mengupload bukti pendukung: ' . $e->getMessage()
+                    ], 500);
+                }
             }
         }
 
@@ -253,60 +267,65 @@ class SuratController extends Controller
     }
     public function update(Request $request, string $id)
     {
-        $surat = Surat::findOrFail($id); // Cari surat atau 404
+        $surat = Surat::findOrFail($id);
 
         // --- Tanpa Validasi Kompleks di Backend (Andalkan Frontend/Input Admin) ---
         // Ambil semua data dari request
         $inputData = $request->all();
 
         // Hapus field yang seharusnya tidak boleh diupdate dari input
-        // (Penting untuk keamanan dan konsistensi!)
         unset(
-            $inputData['id_surat'],     // Primary key tidak boleh diubah
-            $inputData['nomor_surat'], // Nomor surat tidak boleh diubah manual
-            $inputData['jenis_surat'], // Jenis surat sebaiknya tidak diubah
-            $inputData['nik_pemohon'], // NIK pemohon sebaiknya tidak diubah di sini
-            $inputData['created_at'],  // Timestamp otomatis
-            $inputData['updated_at'],  // Timestamp otomatis
-            $inputData['attachment_bukti_pendukung'] // <-- Tambahkan ini ke unset
+            $inputData['id_surat'],
+            $inputData['nomor_surat'],
+            $inputData['jenis_surat'],
+            $inputData['nik_pemohon'],
+            $inputData['created_at'],
+            $inputData['updated_at'],
+            $inputData['attachment_bukti_pendukung']
         );
-        
-        // // Proses upload attachment baru jika ada
-        // if ($request->hasFile('attachment_bukti_pendukung')) {
-        //     // Hapus attachment lama jika ada
-        //     if (!empty($surat->attachment_bukti_pendukung)) {
-        //         foreach (json_decode($surat->attachment_bukti_pendukung, true) as $attachment) {
-        //             if (isset($attachment['path'])) {
-        //                 Storage::disk('public')->delete($attachment['path']);
-        //             }
-        //         }
-        //     }
+
+        // Proses upload attachment baru jika ada
+        if ($request->hasFile('attachment_bukti_pendukung')) {
+            // Hapus attachment lama jika ada
+            if (!empty($surat->attachment_bukti_pendukung)) {
+                foreach ($surat->attachment_bukti_pendukung as $attachment) {
+                    if (isset($attachment['path'])) {
+                        $this->supabaseService->deleteSuratBuktiPendukung($attachment['path']);
+                    }
+                }
+            }
             
-        //     // Simpan file baru ke storage
-        //     $attachmentFiles = [];
-        //     foreach ($request->file('attachment_bukti_pendukung') as $file) {
-        //         $path = $file->store('bukti_pendukung', 'public');
-                
-        //         $attachmentFiles[] = [
-        //             'path' => $path,
-        //             'type' => $file->getClientMimeType(),
-        //             'name' => $file->getClientOriginalName(),
-        //             'url' => '/storage/' . $path
-        //         ];
-        //     }
+            // Simpan file baru ke Supabase
+            $attachmentFiles = [];
+            foreach ($request->file('attachment_bukti_pendukung') as $file) {
+                try {
+                    // Upload file ke Supabase
+                    $uploadResult = $this->supabaseService->uploadSuratBuktiPendukung($file);
+                    
+                    // Simpan informasi file
+                    $attachmentFiles[] = [
+                        'path' => $uploadResult['path'] ?? null,
+                        'type' => $file->getClientMimeType(),
+                        'name' => $file->getClientOriginalName(),
+                        'url' => $this->supabaseService->getSuratBuktiPendukungUrl($uploadResult)
+                    ];
+                } catch (\Exception $e) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Gagal mengupload bukti pendukung: ' . $e->getMessage()
+                    ], 500);
+                }
+            }
             
-        //     // Update attachment_bukti_pendukung dengan array baru
-        //     $surat->attachment_bukti_pendukung = $attachmentFiles;
-        // }
+            // Update attachment_bukti_pendukung dengan array baru
+            $surat->attachment_bukti_pendukung = $attachmentFiles;
+        }
         
         $surat->fill($inputData);
-
-        // Simpan perubahan ke database
         $surat->save();
 
         return response()->json([
             'message' => 'Data surat berhasil diperbarui',
-            // Muat ulang data dari DB untuk memastikan konsistensi + load relasi
             'data' => $surat->fresh()->load('pemohon')
         ]);
     }
@@ -545,11 +564,11 @@ class SuratController extends Controller
         try {
             $surat = Surat::withTrashed()->findOrFail($id);
             
-            // Hapus attachment jika ada
+            // Hapus attachment dari Supabase jika ada
             if (!empty($surat->attachment_bukti_pendukung)) {
-                foreach ((array)$surat->attachment_bukti_pendukung as $attachment) {
+                foreach ($surat->attachment_bukti_pendukung as $attachment) {
                     if (isset($attachment['path'])) {
-                        Storage::disk('public')->delete($attachment['path']);
+                        $this->supabaseService->deleteSuratBuktiPendukung($attachment['path']);
                     }
                 }
             }

@@ -55,7 +55,7 @@
             <tr>
                 <td>KK</td>
                 <td>:</td>
-                <td>{{ $surat->kk_pemohon ?? (optional($surat->pemohon)->kk ?? '..................................................') }}</td>
+                <td>{{ $surat->kk_pemohon ?? (optional($surat->pemohon)->no_kk ?? '..................................................') }}</td>
             </tr>
             <tr>
                 <td>Tempat, Tanggal Lahir</td>

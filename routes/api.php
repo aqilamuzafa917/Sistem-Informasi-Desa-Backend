@@ -10,6 +10,8 @@ use App\Http\Controllers\ArtikelController;
 use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\ApbDesaController; // Tambahkan ini
 use App\Http\Controllers\PengaduanController;
+use App\Http\Controllers\MapController;
+use App\Http\Controllers\DesaConfigController;
 
 /*
 |--------------------------------------------------------------------------
@@ -48,6 +50,17 @@ Route::get('/publik/apbdesa/statistik', [ApbDesaController::class, 'getStatistik
 
 // Rute Publik Pengaduan
 Route::post('/publik/pengaduan', [PengaduanController::class, 'store']); // Membuat pengaduan baru
+// Route untuk generate PDF APB Desa
+Route::get('/publik/apb-desa/pdf/{tahun?}', [ApbDesaController::class, 'generatePDF']);
+
+Route::get('/publik/profil-desa/{nama_desa}', [ProfilDesaController::class, 'showByName']);
+Route::get('/publik/profil-desa/{id}', [ProfilDesaController::class, 'show']); // Get by ID
+Route::get('/publik/profil-desa/{id}/identitas', [ProfilDesaController::class, 'getNamaDesa']); // Get nama_desa by ID
+
+
+// Routes untuk API Map (POI)
+Route::get('/publik/map', [MapController::class, 'getBoundary']); // Mendapatkan data peta
+Route::get('/publik/map/poi', [MapController::class, 'getPOI']); // Mendapatkan data POI berdasarkan amenity
 
 /*
 |--------------------------------------------------------------------------
@@ -80,7 +93,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // CRUD Profil Desa (Admin)
     Route::get('/profil-desa', [ProfilDesaController::class, 'index']);
     Route::post('/profil-desa', [ProfilDesaController::class, 'store']); // Admin menyimpan atau memperbarui profil desa
-    Route::get('/profil-desa/{nama_desa}', [ProfilDesaController::class, 'showByName']);
+    Route::get('/profil-desa/{id}', [ProfilDesaController::class, 'show']); // Get by ID
+    Route::get('/profil-desa/{id}/nama', [ProfilDesaController::class, 'getNamaDesa']); // Get nama_desa by ID
+    Route::patch('/profil-desa/{id}', [ProfilDesaController::class, 'update']); // Update specific fields
     Route::delete('/profil-desa/{nama_desa}', [ProfilDesaController::class, 'destroyByName']); 
 
     // CRUD Penduduk (Admin)
@@ -123,15 +138,19 @@ Route::middleware('auth:sanctum')->group(function () {
     // Total APB Desa
     Route::get('/apbdesa', [ApbDesaController::class, 'indexTotalApb']);
 
-    //Routes untuk Pengaduan
-    Route::get('/pengaduan', [PengaduanController::class, 'index']); // Melihat daftar pengaduan
-    Route::get('/pengaduan/{pengaduan}', [PengaduanController::class, 'show']); // Melihat detail pengaduan
-    Route::patch('/pengaduan/{pengaduan}/status', [PengaduanController::class, 'updateStatus']); // Mengupdate status pengaduan
-    Route::delete('/pengaduan/{pengaduan}', [PengaduanController::class, 'destroy']); // Menghapus pengaduan
-    Route::get('/pengaduan/kategori', [PengaduanController::class, 'filterByKategori']); // Filter pengaduan berdasarkan kategori
-    Route::get('/pengaduan/filter', [PengaduanController::class, 'filterByStatus']); // Filter pengaduan berdasarkan status
-
     // Routes untuk Statistik Pengaduan
     Route::get('/pengaduan/stats', [PengaduanController::class, 'getStatistikPengaduan']); // Mendapatkan statistik pengaduan
 
+    //Routes untuk Pengaduan
+    Route::get('/pengaduan', [PengaduanController::class, 'index']); // Melihat daftar pengaduan
+    Route::get('/pengaduan/kategori', [PengaduanController::class, 'filterByKategori']); // Filter pengaduan berdasarkan kategori
+    Route::get('/pengaduan/filter', [PengaduanController::class, 'filterByStatus']); // Filter pengaduan berdasarkan status
+    Route::get('/pengaduan/{pengaduan}', [PengaduanController::class, 'show']); // Melihat detail pengaduan
+    Route::patch('/pengaduan/{pengaduan}/status', [PengaduanController::class, 'updateStatus']); // Mengupdate status pengaduan
+    Route::delete('/pengaduan/{pengaduan}', [PengaduanController::class, 'destroy']); // Menghapus pengaduan
+
+
+    // Desa Config Routes
+    Route::get('/desa-config', [DesaConfigController::class, 'getConfig']);
+    Route::put('/desa-config', [DesaConfigController::class, 'updateConfig']);
 });
