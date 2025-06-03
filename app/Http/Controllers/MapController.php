@@ -10,7 +10,7 @@ class MapController extends Controller
 {
     public function getBoundary()
     {
-        $polygon = ProfilDesa::firstorFail(['id' => 1])->batas_wilayah;
+        $polygon = ProfilDesa::firstOrFail()->batas_wilayah;
 
         return response()->json([
             'type' => 'FeatureCollection',
@@ -31,7 +31,7 @@ class MapController extends Controller
     {
         $amenity = $request->input('amenity', 'school');
 
-        $polygon = ProfilDesa::firstorFail(['id' => 1])->batas_wilayah;
+        $polygon = ProfilDesa::where('id', 1)->firstOrFail()->batas_wilayah;
 
         $bbox = '107.48,-6.93,107.53,-6.90';
         $query = <<<OVERPASS
