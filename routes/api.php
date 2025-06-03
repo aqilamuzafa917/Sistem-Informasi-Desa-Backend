@@ -56,6 +56,12 @@ Route::get('/publik/apb-desa/pdf/{tahun?}', [ApbDesaController::class, 'generate
 Route::get('/publik/profil-desa/{nama_desa}', [ProfilDesaController::class, 'showByName']);
 Route::get('/publik/profil-desa/{id}', [ProfilDesaController::class, 'show']); // Get by ID
 Route::get('/publik/profil-desa/{id}/identitas', [ProfilDesaController::class, 'getNamaDesa']); // Get nama_desa by ID
+
+
+// Routes untuk API Map (POI)
+Route::get(('map'), [MapController::class, 'getBoundary']); // Mendapatkan data peta
+Route::get('/map/poi', [MapController::class, 'getPOI']); // Mendapatkan data POI berdasarkan amenity
+
 /*
 |--------------------------------------------------------------------------
 | Rute Admin (Membutuhkan Autentikasi - Sanctum) - CRUD Lengkap
@@ -142,10 +148,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Routes untuk Statistik Pengaduan
     Route::get('/pengaduan/stats', [PengaduanController::class, 'getStatistikPengaduan']); // Mendapatkan statistik pengaduan
-
-    // Routes untuk API Map (POI)
-    Route::get(('map'), [MapController::class, 'getBoundary']); // Mendapatkan data peta
-    Route::get('/map/poi', [MapController::class, 'getPOI']); // Mendapatkan data POI berdasarkan amenity
 
     // Desa Config Routes
     Route::get('/desa-config', [DesaConfigController::class, 'getConfig']);
