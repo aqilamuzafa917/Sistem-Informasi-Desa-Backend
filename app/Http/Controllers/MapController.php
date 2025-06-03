@@ -2,12 +2,73 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PotensiLoc;
 use App\Models\ProfilDesa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
 class MapController extends Controller
 {
+    public function store(Request $request)
+    {
+        $request->validate([
+            'nama' => 'required|string',
+            'lat' => 'required|numeric',
+            'lon' => 'required|numeric',
+            'category' => 'required|string',
+            'tags' => 'nullable|array',
+        ]);
+
+        $potensi = PotensiLoc::create([
+            'nama' => $request->nama,
+            'latitude' => $request->lat,
+            'longitude' => $request->lon,
+            'kategori' => $request->category,
+            'tags' => $request->tags ?? [],
+        ]);
+
+        return response()->json($potensi, 201);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $potensi = PotensiLoc::findOrFail($id);
+
+        $request->validate([
+            'nama' => 'required|string',
+            'lat' => 'required|numeric',
+            'lon' => 'required|numeric',
+            'category' => 'required|string',
+            'tags' => 'nullable|array',
+        ]);
+
+        $potensi->update([
+            'nama' => $request->nama,
+            'latitude' => $request->lat,
+            'longitude' => $request->lon,
+            'kategori' => $request->category,
+            'tags' => $request->tags ?? [],
+        ]);
+
+        return response()->json($potensi);
+    }
+
+    public function destroy($id)
+    {
+        $potensi = PotensiLoc::findOrFail($id)->delete();
+        if (!$potensi) {
+            return response()->json(['error' => 'Potensi tidak ditemukan'], 404);
+        }
+
+        return response()->json(null, 204);
+    }
+
+    public function show($id)
+    {
+        $potensi = PotensiLoc::findOrFail($id);
+        return response()->json($potensi);
+    }
+
     public function getBoundary()
     {
         $polygon = ProfilDesa::firstOrFail()->batas_wilayah;
@@ -111,4 +172,6 @@ class MapController extends Controller
 
         return $inside;
     }
+
+
 }
