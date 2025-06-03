@@ -150,8 +150,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/pengaduan/{pengaduan}/status', [PengaduanController::class, 'updateStatus']); // Mengupdate status pengaduan
     Route::delete('/pengaduan/{pengaduan}', [PengaduanController::class, 'destroy']); // Menghapus pengaduan
 
-
     // Desa Config Routes
     Route::get('/desa-config', [DesaConfigController::class, 'getConfig']);
     Route::put('/desa-config', [DesaConfigController::class, 'updateConfig']);
+
+    // CRUD Potensi (Map)
+    Route::get('/map/poi', [MapController::class, 'show']); // Mendapatkan data POI
+    Route::post('/map/poi', [MapController::class, 'store']); // Menambahkan POI baru
+    Route::put('/map/poi/{id}', [MapController::class, 'update']); // Memperbarui POI
+    Route::delete('/map/poi/{id}', [MapController::class, 'destroy']); // Menghapus POI
 });
