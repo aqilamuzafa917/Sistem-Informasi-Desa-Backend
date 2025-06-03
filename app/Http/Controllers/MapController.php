@@ -30,10 +30,11 @@ class MapController extends Controller
     public function getPOI(Request $request)
     {
         $amenity = $request->query('amenity', 'school');
-        // dd($amenity);
+
         $polygon = ProfilDesa::where('id', 1)->firstOrFail()->batas_wilayah;
-        // dd($polygon);
+
         $bbox = '-6.93,107.48,-6.90,107.53';
+
         $query = <<<OVERPASS
             [out:json][timeout:25];
             (
@@ -42,38 +43,54 @@ class MapController extends Controller
             relation["amenity"="$amenity"]($bbox);
             );
             out center;
-            OVERPASS;
+        OVERPASS;
 
         $response = Http::timeout(20)->asForm()->post('https://overpass-api.de/api/interpreter', [
             'data' => $query
         ]);
-        // dd($response->body());
 
         if (!$response->successful()) {
             return response()->json(['error' => 'Gagal mengambil POI'], 500);
         }
 
         $elements = $response->json('elements');
-        $poiInArea = [];
+        $filtered = collect($elements)
+            ->map(function ($el) {
+                $lat = $el['lat'] ?? ($el['center']['lat'] ?? null);
+                $lon = $el['lon'] ?? ($el['center']['lon'] ?? null);
 
-        foreach ($elements as $el) {
-            $lat = $el['lat'] ?? ($el['center']['lat'] ?? null);
-            $lon = $el['lon'] ?? ($el['center']['lon'] ?? null);
-
-            if (!$lat || !$lon) continue;
-
-            if ($this->pointInPolygon([$lon, $lat], $polygon)) {
-                $poiInArea[] = [
+                return [
                     'name' => $el['tags']['name'] ?? 'Tanpa Nama',
                     'lat' => $lat,
                     'lon' => $lon,
                     'tags' => $el['tags'] ?? [],
                 ];
-            }
-        }
+            })
+            ->filter(function ($el) use ($polygon) {
+                return $el['lat'] && $el['lon'] && $this->pointInPolygon([$el['lon'], $el['lat']], $polygon);
+            })
+            ->unique('name'); 
 
-        return response()->json($poiInArea);
+        $features = $filtered->map(function ($el) {
+            return [
+                'type' => 'Feature',
+                'geometry' => [
+                    'type' => 'Point',
+                    'coordinates' => [$el['lon'], $el['lat']],
+                ],
+                'properties' => [
+                    'name' => $el['name'],
+                    'tags' => $el['tags'],
+                ],
+            ];
+        });
+
+        return response()->json([
+            'type' => 'FeatureCollection',
+            'features' => $features->values(),
+        ]);
     }
+
 
     private function pointInPolygon($point, $polygon)
     {
