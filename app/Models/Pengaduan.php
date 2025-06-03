@@ -17,7 +17,7 @@ class Pengaduan extends Model
         'kategori',
         'detail_pengaduan',
         'status',
-        'foto',
+        'media',
     ];
 
     protected $keyType = 'string';
@@ -28,6 +28,6 @@ class Pengaduan extends Model
         'kategori' => KategoriPengaduan::class,
         'detail_pengaduan' => 'string',
         'status' => StatusPengaduan::class,
-        'foto' => 'string',
+        'media' => 'array',
     ];
 }
