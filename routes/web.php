@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return "Desa " . config('desa.nama_desa');
+    return ['Sistem Informasi Desa'];
 });
 
 // Route::get('/test-config', function () {

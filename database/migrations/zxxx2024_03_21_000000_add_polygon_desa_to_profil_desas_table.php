@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('profil_desas', function (Blueprint $table) {
-            $table->json('social_media')->nullable()->after('batas_wilayah');
+            $table->json('polygon_desa')->nullable()->comment('Array of coordinates defining village boundary polygon');
         });
     }
 
@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('profil_desas', function (Blueprint $table) {
-            $table->dropColumn('social_media');
+            $table->dropColumn('polygon_desa');
         });
     }
 }; 
