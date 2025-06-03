@@ -29,11 +29,11 @@ class MapController extends Controller
 
     public function getPOI(Request $request)
     {
-        $amenity = $request->input('amenity', 'school');
-
+        $amenity = $request->query('amenity', 'school');
+        // dd($amenity);
         $polygon = ProfilDesa::where('id', 1)->firstOrFail()->batas_wilayah;
-
-        $bbox = '107.48,-6.93,107.53,-6.90';
+        // dd($polygon);
+        $bbox = '-6.93,107.48,-6.90,107.53';
         $query = <<<OVERPASS
             [out:json][timeout:25];
             (
@@ -47,6 +47,7 @@ class MapController extends Controller
         $response = Http::timeout(20)->asForm()->post('https://overpass-api.de/api/interpreter', [
             'data' => $query
         ]);
+        // dd($response->body());
 
         if (!$response->successful()) {
             return response()->json(['error' => 'Gagal mengambil POI'], 500);
