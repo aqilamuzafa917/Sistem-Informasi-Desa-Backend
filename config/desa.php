@@ -14,7 +14,7 @@ return array (
   'nama_pejabat_ttd' => 'Pak Rafi',
   'nip_pejabat_ttd' => '19XXXXXXXXXXXXXX',
   'sosial_media' => 'https://www.instagram.com/kecamatanbatujajarkbb',
-  'website_desa' => 'https://batujajartimur.desa.id',
+  'website_desa' => 'http://localhost:5173',
   'email_desa' => 'info@batujajartimur.desa.id',
   'telepon_desa' => '(022) 68XXXXX',
 );
