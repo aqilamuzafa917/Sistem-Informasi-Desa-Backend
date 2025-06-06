@@ -168,12 +168,15 @@ class SuratController extends Controller
                     // Upload file ke Supabase
                     $uploadResult = $this->supabaseService->uploadSuratBuktiPendukung($file);
                     
+                    // Get the URL and ensure it's properly encoded
+                    $url = $this->supabaseService->getSuratBuktiPendukungUrl($uploadResult);
+                    
                     // Simpan informasi file
                     $attachmentFiles[] = [
                         'path' => $uploadResult['path'] ?? null,
                         'type' => $file->getClientMimeType(),
                         'name' => $file->getClientOriginalName(),
-                        'url' => $this->supabaseService->getSuratBuktiPendukungUrl($uploadResult)
+                        'url' => $url
                     ];
                 } catch (\Exception $e) {
                     return response()->json([
@@ -302,12 +305,15 @@ class SuratController extends Controller
                     // Upload file ke Supabase
                     $uploadResult = $this->supabaseService->uploadSuratBuktiPendukung($file);
                     
+                    // Get the URL and ensure it's properly encoded
+                    $url = $this->supabaseService->getSuratBuktiPendukungUrl($uploadResult);
+                    
                     // Simpan informasi file
                     $attachmentFiles[] = [
                         'path' => $uploadResult['path'] ?? null,
                         'type' => $file->getClientMimeType(),
                         'name' => $file->getClientOriginalName(),
-                        'url' => $this->supabaseService->getSuratBuktiPendukungUrl($uploadResult)
+                        'url' => $url
                     ];
                 } catch (\Exception $e) {
                     return response()->json([

@@ -4,6 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Penduduk;
+use App\Enums\JenisKelamin;
+use App\Enums\StatusPerkawinan;
+use App\Enums\Agama;
+use Illuminate\Support\Facades\DB;
 
 class PendudukController extends Controller
 {
@@ -49,13 +53,67 @@ class PendudukController extends Controller
     public function getStatistikPenduduk()
     {
         $totalPenduduk = Penduduk::count();
-        $totalLakiLaki = Penduduk::where('jenis_kelamin', \App\Enums\JenisKelamin::LakiLaki)->count();
-        $totalPerempuan = Penduduk::where('jenis_kelamin', \App\Enums\JenisKelamin::Perempuan)->count();
+        $totalLakiLaki = Penduduk::where('jenis_kelamin', JenisKelamin::LakiLaki)->count();
+        $totalPerempuan = Penduduk::where('jenis_kelamin', JenisKelamin::Perempuan)->count();
+        $totalKK = Penduduk::distinct('no_kk')->count('no_kk');
+
+        // Data Usia - Menggunakan kelompok usia standar demografi
+        $usia = [
+            '0_4' => Penduduk::whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) BETWEEN 0 AND 4')->count(),
+            '5_9' => Penduduk::whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) BETWEEN 5 AND 9')->count(),
+            '10_14' => Penduduk::whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) BETWEEN 10 AND 14')->count(),
+            '15_19' => Penduduk::whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) BETWEEN 15 AND 19')->count(),
+            '20_29' => Penduduk::whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) BETWEEN 20 AND 29')->count(),
+            '30_39' => Penduduk::whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) BETWEEN 30 AND 39')->count(),
+            '40_49' => Penduduk::whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) BETWEEN 40 AND 49')->count(),
+            '50_59' => Penduduk::whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) BETWEEN 50 AND 59')->count(),
+            '60_plus' => Penduduk::whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) >= 60')->count(),
+        ];
+
+        // Data Pendidikan - Dinamis berdasarkan data yang ada
+        $pendidikan = Penduduk::select('pendidikan', DB::raw('count(*) as total'))
+            ->whereNotNull('pendidikan')
+            ->groupBy('pendidikan')
+            ->get()
+            ->pluck('total', 'pendidikan')
+            ->toArray();
+
+        // Data Pekerjaan - Dinamis berdasarkan data yang ada
+        $pekerjaan = Penduduk::select('pekerjaan', DB::raw('count(*) as total'))
+            ->whereNotNull('pekerjaan')
+            ->groupBy('pekerjaan')
+            ->get()
+            ->pluck('total', 'pekerjaan')
+            ->toArray();
+
+        // Data Status Perkawinan - Menggunakan enum values
+        $status_perkawinan = [
+            'belum_menikah' => Penduduk::where('status_perkawinan', StatusPerkawinan::BelumMenikah)->count(),
+            'menikah' => Penduduk::where('status_perkawinan', StatusPerkawinan::Menikah)->count(),
+            'cerai_hidup' => Penduduk::where('status_perkawinan', StatusPerkawinan::CeraiHidup)->count(),
+            'cerai_mati' => Penduduk::where('status_perkawinan', StatusPerkawinan::CeraiMati)->count(),
+        ];
+
+        // Data Agama - Menggunakan enum values
+        $agama = [
+            'islam' => Penduduk::where('agama', Agama::Islam)->count(),
+            'kristen' => Penduduk::where('agama', Agama::Kristen)->count(),
+            'katolik' => Penduduk::where('agama', Agama::Katolik)->count(),
+            'hindu' => Penduduk::where('agama', Agama::Hindu)->count(),
+            'buddha' => Penduduk::where('agama', Agama::Buddha)->count(),
+            'konghucu' => Penduduk::where('agama', Agama::Konghucu)->count(),
+        ];
 
         return response()->json([
             'total_penduduk' => $totalPenduduk,
             'total_laki_laki' => $totalLakiLaki,
             'total_perempuan' => $totalPerempuan,
+            'total_kk' => $totalKK,
+            'data_usia' => $usia,
+            'data_pendidikan' => $pendidikan,
+            'data_pekerjaan' => $pekerjaan,
+            'data_status_perkawinan' => $status_perkawinan,
+            'data_agama' => $agama,
         ]);
     }
 

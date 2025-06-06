@@ -28,7 +28,6 @@ Route::post('/login', [AuthController::class, 'login']); // Admin login
 */
 // Rute GET Profil Desa
 Route::get('/publik/profil-desa', [ProfilDesaController::class, 'index']); // Mengambil semua data profil desa
-Route::get('/publik/profil-desa/{nama_desa}', [ProfilDesaController::class, 'showByName']); // Mengambil data profil desa berdasarkan nama
 
 // Rute GET Surat berdasarkan NIK (Publik)
 Route::get('/publik/surat/{nik}', [SuratController::class, 'showByNik']); // Lihat daftar surat berdasarkan NIK pengguna
@@ -53,7 +52,7 @@ Route::post('/publik/pengaduan', [PengaduanController::class, 'store']); // Memb
 // Route untuk generate PDF APB Desa
 Route::get('/publik/apb-desa/pdf/{tahun?}', [ApbDesaController::class, 'generatePDF']);
 
-Route::get('/publik/profil-desa/{nama_desa}', [ProfilDesaController::class, 'showByName']);
+// Route::get('/publik/profil-desa/{nama_desa}', [ProfilDesaController::class, 'showByName']);
 Route::get('/publik/profil-desa/{id}', [ProfilDesaController::class, 'show']); // Get by ID
 Route::get('/publik/profil-desa/{id}/identitas', [ProfilDesaController::class, 'getNamaDesa']); // Get nama_desa by ID
 
@@ -61,7 +60,9 @@ Route::get('/publik/profil-desa/{id}/identitas', [ProfilDesaController::class, '
 // Routes untuk API Map (POI)
 Route::get('/publik/map', [MapController::class, 'getBoundary']); // Mendapatkan data peta
 Route::get('/publik/map/poi', [MapController::class, 'getPOI']); // Mendapatkan data POI berdasarkan amenity
+Route::get('/publik/desa-config', [DesaConfigController::class, 'getConfig']);
 
+Route::get('/publik/penduduk/stats', [PendudukController::class, 'getStatistikPenduduk']);
 /*
 |--------------------------------------------------------------------------
 | Rute Admin (Membutuhkan Autentikasi - Sanctum) - CRUD Lengkap

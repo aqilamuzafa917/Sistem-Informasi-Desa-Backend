@@ -181,7 +181,7 @@ class ProfilDesaController extends Controller
      */
     public function show(string $id)
     {
-        $profil = ProfilDesa::find($id);
+        $profil = ProfilDesa::where('id', $id)->first();
         
         if (!$profil) {
             return response()->json(['message' => 'Profil desa tidak ditemukan'], 404);

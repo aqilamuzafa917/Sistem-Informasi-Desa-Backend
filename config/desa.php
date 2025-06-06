@@ -17,4 +17,5 @@ return array (
   'website_desa' => 'http://localhost:5173',
   'email_desa' => 'info@batujajartimur.desa.id',
   'telepon_desa' => '(022) 68XXXXX',
+  'logo_desa' => 'https://cdn.digitaldesa.com/uploads/profil/32.17.13.2003/common/300_bandungbarat.png',
 );
