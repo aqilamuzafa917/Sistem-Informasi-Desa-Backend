@@ -59,15 +59,60 @@ class PendudukController extends Controller
 
         // Data Usia - Menggunakan kelompok usia standar demografi
         $usia = [
-            '0_4' => Penduduk::whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) BETWEEN 0 AND 4')->count(),
-            '5_9' => Penduduk::whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) BETWEEN 5 AND 9')->count(),
-            '10_14' => Penduduk::whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) BETWEEN 10 AND 14')->count(),
-            '15_19' => Penduduk::whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) BETWEEN 15 AND 19')->count(),
-            '20_29' => Penduduk::whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) BETWEEN 20 AND 29')->count(),
-            '30_39' => Penduduk::whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) BETWEEN 30 AND 39')->count(),
-            '40_49' => Penduduk::whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) BETWEEN 40 AND 49')->count(),
-            '50_59' => Penduduk::whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) BETWEEN 50 AND 59')->count(),
-            '60_plus' => Penduduk::whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) >= 60')->count(),
+            '0_4' => [
+                'laki_laki' => Penduduk::whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) BETWEEN 0 AND 4')
+                    ->where('jenis_kelamin', JenisKelamin::LakiLaki)->count(),
+                'perempuan' => Penduduk::whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) BETWEEN 0 AND 4')
+                    ->where('jenis_kelamin', JenisKelamin::Perempuan)->count(),
+            ],
+            '5_9' => [
+                'laki_laki' => Penduduk::whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) BETWEEN 5 AND 9')
+                    ->where('jenis_kelamin', JenisKelamin::LakiLaki)->count(),
+                'perempuan' => Penduduk::whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) BETWEEN 5 AND 9')
+                    ->where('jenis_kelamin', JenisKelamin::Perempuan)->count(),
+            ],
+            '10_14' => [
+                'laki_laki' => Penduduk::whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) BETWEEN 10 AND 14')
+                    ->where('jenis_kelamin', JenisKelamin::LakiLaki)->count(),
+                'perempuan' => Penduduk::whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) BETWEEN 10 AND 14')
+                    ->where('jenis_kelamin', JenisKelamin::Perempuan)->count(),
+            ],
+            '15_19' => [
+                'laki_laki' => Penduduk::whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) BETWEEN 15 AND 19')
+                    ->where('jenis_kelamin', JenisKelamin::LakiLaki)->count(),
+                'perempuan' => Penduduk::whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) BETWEEN 15 AND 19')
+                    ->where('jenis_kelamin', JenisKelamin::Perempuan)->count(),
+            ],
+            '20_29' => [
+                'laki_laki' => Penduduk::whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) BETWEEN 20 AND 29')
+                    ->where('jenis_kelamin', JenisKelamin::LakiLaki)->count(),
+                'perempuan' => Penduduk::whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) BETWEEN 20 AND 29')
+                    ->where('jenis_kelamin', JenisKelamin::Perempuan)->count(),
+            ],
+            '30_39' => [
+                'laki_laki' => Penduduk::whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) BETWEEN 30 AND 39')
+                    ->where('jenis_kelamin', JenisKelamin::LakiLaki)->count(),
+                'perempuan' => Penduduk::whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) BETWEEN 30 AND 39')
+                    ->where('jenis_kelamin', JenisKelamin::Perempuan)->count(),
+            ],
+            '40_49' => [
+                'laki_laki' => Penduduk::whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) BETWEEN 40 AND 49')
+                    ->where('jenis_kelamin', JenisKelamin::LakiLaki)->count(),
+                'perempuan' => Penduduk::whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) BETWEEN 40 AND 49')
+                    ->where('jenis_kelamin', JenisKelamin::Perempuan)->count(),
+            ],
+            '50_59' => [
+                'laki_laki' => Penduduk::whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) BETWEEN 50 AND 59')
+                    ->where('jenis_kelamin', JenisKelamin::LakiLaki)->count(),
+                'perempuan' => Penduduk::whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) BETWEEN 50 AND 59')
+                    ->where('jenis_kelamin', JenisKelamin::Perempuan)->count(),
+            ],
+            '60_plus' => [
+                'laki_laki' => Penduduk::whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) >= 60')
+                    ->where('jenis_kelamin', JenisKelamin::LakiLaki)->count(),
+                'perempuan' => Penduduk::whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) >= 60')
+                    ->where('jenis_kelamin', JenisKelamin::Perempuan)->count(),
+            ],
         ];
 
         // Data Pendidikan - Dinamis berdasarkan data yang ada
