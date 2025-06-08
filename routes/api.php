@@ -63,6 +63,11 @@ Route::get('/publik/map/poi', [MapController::class, 'getPOI']); // Mendapatkan 
 Route::get('/publik/desa-config', [DesaConfigController::class, 'getConfig']);
 
 Route::get('/publik/penduduk/stats', [PendudukController::class, 'getStatistikPenduduk']);
+
+// Rute untuk IDM
+Route::get('/publik/idm', [App\Http\Controllers\IDMController::class, 'index']); // Mendapatkan data IDM
+Route::get('/publik/idm/{tahun?}', [App\Http\Controllers\IDMController::class, 'show']); // Mendapatkan data IDM berdasarkan tahun
+
 /*
 |--------------------------------------------------------------------------
 | Rute Admin (Membutuhkan Autentikasi - Sanctum) - CRUD Lengkap
@@ -160,4 +165,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/map/poi', [MapController::class, 'store']); // Menambahkan POI baru
     Route::put('/map/poi/{id}', [MapController::class, 'update']); // Memperbarui POI
     Route::delete('/map/poi/{id}', [MapController::class, 'destroy']); // Menghapus POI
+
+    // Routes untuk IDM
+    Route::post('/idm', [App\Http\Controllers\IDMController::class, 'store']); // Menambahkan data IDM baru
+    Route::put('/idm/{iDM}', [App\Http\Controllers\IDMController::class, 'update']); // Memperbarui data IDM
+    Route::delete('/idm/{iDM}', [App\Http\Controllers\IDMController::class, 'destroy']); // Menghapus data IDM
 });
