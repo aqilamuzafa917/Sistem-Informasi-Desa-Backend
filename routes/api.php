@@ -63,6 +63,8 @@ Route::get('/publik/map/poi', [MapController::class, 'getPOI']); // Mendapatkan 
 Route::get('/publik/desa-config', [DesaConfigController::class, 'getConfig']);
 
 Route::get('/publik/penduduk/stats', [PendudukController::class, 'getStatistikPenduduk']);
+Route::get('/publik/penduduk/{nik}', [PendudukController::class, 'getNamaByNik']);
+
 
 // Rute untuk IDM
 Route::get('/publik/idm', [App\Http\Controllers\IDMController::class, 'index']); // Mendapatkan data IDM
@@ -171,3 +173,4 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/idm/{iDM}', [App\Http\Controllers\IDMController::class, 'update']); // Memperbarui data IDM
     Route::delete('/idm/{iDM}', [App\Http\Controllers\IDMController::class, 'destroy']); // Menghapus data IDM
 });
+

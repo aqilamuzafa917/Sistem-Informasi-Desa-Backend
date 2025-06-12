@@ -218,4 +218,21 @@ class PendudukController extends Controller
 
         return response()->json($penduduk);
     }
+
+    public function getNamaByNik($nik)
+    {
+        $penduduk = Penduduk::where('nik', $nik)
+            ->select('nama')
+            ->first();
+
+        if (!$penduduk) {
+            return response()->json([
+                'message' => 'Data tidak ditemukan'
+            ], 404);
+        }
+
+        return response()->json([
+            'nama' => $penduduk->nama
+        ]);
+    }
 }
