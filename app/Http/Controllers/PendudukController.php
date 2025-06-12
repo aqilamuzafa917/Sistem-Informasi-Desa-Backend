@@ -231,8 +231,14 @@ class PendudukController extends Controller
             ], 404);
         }
 
+        // Split the name into parts and mask each part
+        $namaParts = explode(' ', $penduduk->nama);
+        $maskedNama = array_map(function($part) {
+            return $part[0] . str_repeat('*', strlen($part) - 1);
+        }, $namaParts);
+
         return response()->json([
-            'nama' => $penduduk->nama
+            'nama' => implode(' ', $maskedNama)
         ]);
     }
 }
