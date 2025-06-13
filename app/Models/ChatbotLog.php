@@ -15,6 +15,11 @@ class ChatbotLog extends Model
         'ip_address',
         'user_id',
         'session_id',
+        'message_history',
+    ];
+
+    protected $casts = [
+        'message_history' => 'array',
     ];
 
     /**

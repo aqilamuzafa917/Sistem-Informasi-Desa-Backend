@@ -33,8 +33,10 @@ Route::get('/publik/profil-desa', [ProfilDesaController::class, 'index']); // Me
 Route::get('/publik/surat/{nik}', [SuratController::class, 'showByNik']); // Lihat daftar surat berdasarkan NIK pengguna
 Route::get('/publik/surat/{nik}/{id}/pdf', [SuratController::class, 'generatePDF']); // Download PDF surat (jika diinginkan publik)
 Route::post('/publik/surat', [SuratController::class, 'store']);  // Membuat surat baru
+Route::get('/publik/surat-latest/{nik}', [SuratController::class, 'latestShowByNik']); // Lihat 3 surat terbaru berdasarkan NIK pengguna
 
 // Rute Artikel Publik (Tanpa Autentikasi)
+Route::get('/publik/artikel-latest', [ArtikelController::class, 'latestpublicIndex']); // Mendapatkan semua artikel publik
 Route::get('/publik/artikel', [ArtikelController::class, 'publicIndex']); // Mendapatkan semua artikel publik
 Route::get('/publik/artikel/{id}', [ArtikelController::class, 'publicShow']); // Mendapatkan detail artikel publik
 Route::post('/publik/artikel', [ArtikelController::class, 'publicStore']); // Membuat artikel warga
@@ -63,6 +65,7 @@ Route::get('/publik/map/poi', [MapController::class, 'getPOI']); // Mendapatkan 
 Route::get('/publik/desa-config', [DesaConfigController::class, 'getConfig']);
 
 Route::get('/publik/penduduk/stats', [PendudukController::class, 'getStatistikPenduduk']);
+Route::get('/publik/penduduk/stats-chatbot', [PendudukController::class, 'getStatistikPendudukForChatbot']);
 Route::get('/publik/penduduk/{nik}', [PendudukController::class, 'getNamaByNik']);
 
 
@@ -81,6 +84,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) { // Mendapatkan info admin yang login
         return $request->user();
     });
+    Route::get('/user-list', [AuthController::class, 'getAllUsers']); // Get all users with pagination
 
     // CRUD Surat (Admin)
     Route::get('/surat', [SuratController::class, 'index']);   // Admin melihat daftar semua surat

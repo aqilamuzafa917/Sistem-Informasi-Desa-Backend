@@ -2,7 +2,7 @@
 
 return array (
   'kode' => 'BTJR-TMR',
-  'nama_kabupaten' => 'Bandung Barat',
+  'nama_kabupaten' => 'Kabupaten Bandung Barat',
   'nama_kecamatan' => 'Batujajar',
   'nama_desa' => 'Batujajar Timur',
   'alamat_desa' => 'Jl. Raya Batujajar No.191, Batujajar Timur, Kec. Batujajar, Kabupaten Bandung Barat, Jawa Barat 40561',

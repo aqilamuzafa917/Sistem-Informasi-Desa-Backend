@@ -9,6 +9,9 @@ use App\Enums\StatusPerkawinan;
 use App\Enums\Agama;
 use Illuminate\Support\Facades\DB;
 use Spatie\Async\Pool;
+use Illuminate\Support\Facades\Log;
+use Throwable;
+
 class PendudukController extends Controller
 {
     public function index()
@@ -204,6 +207,42 @@ class PendudukController extends Controller
                 'konghucu' => $statusAndAgama->konghucu,
             ],
         ]);
+    }
+
+    public function getStatistikPendudukForChatbot(Request $request)
+    {
+        try {
+            $stats = Penduduk::selectRaw('
+                COUNT(*) as total_penduduk,
+                COUNT(CASE WHEN jenis_kelamin = ? THEN 1 END) as total_laki_laki,
+                COUNT(CASE WHEN jenis_kelamin = ? THEN 1 END) as total_perempuan,
+                COUNT(DISTINCT no_kk) as total_kk,
+                COUNT(CASE WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) < 17 THEN 1 END) as usia_anak,
+                COUNT(CASE WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, tanggal_lahir)) >= 60 THEN 1 END) as usia_lansia
+            ', [
+                JenisKelamin::LakiLaki->value,
+                JenisKelamin::Perempuan->value
+            ])->first();
+
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'total_penduduk' => $stats->total_penduduk,
+                    'total_laki_laki' => $stats->total_laki_laki,
+                    'total_perempuan' => $stats->total_perempuan,
+                    'total_kk' => $stats->total_kk,
+                    'usia_anak' => $stats->usia_anak,
+                    'usia_lansia' => $stats->usia_lansia
+                ]
+            ]);
+
+        } catch (Throwable $e) {
+            Log::error('Error in getStatistikPendudukForChatbot: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Terjadi kesalahan internal saat mengambil data statistik.'
+            ], 500);
+        }
     }
 
     public function searchByNoKK()

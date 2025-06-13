@@ -67,4 +67,28 @@ class AuthController extends Controller
             'user' => $request->user()
         ]);
     }
+
+    /**
+     * Get all users with pagination
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getAllUsers(Request $request)
+    {
+        $perPage = $request->input('per_page', 15); // Default 15 items per page
+        $users = User::paginate($perPage);
+        
+        return response()->json([
+            'users' => $users->items(),
+            'pagination' => [
+                'total' => $users->total(),
+                'per_page' => $users->perPage(),
+                'current_page' => $users->currentPage(),
+                'last_page' => $users->lastPage(),
+                'from' => $users->firstItem(),
+                'to' => $users->lastItem()
+            ]
+        ]);
+    }
 }

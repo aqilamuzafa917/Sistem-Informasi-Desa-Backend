@@ -268,6 +268,35 @@ class SuratController extends Controller
 
         return response()->json($surat);
     }
+
+    public function latestShowByNik(string $nik)
+    {
+        if (!ctype_digit($nik) || strlen($nik) !== 16) {
+             return response()->json(['message' => 'Format NIK tidak valid. Harus 16 digit angka.'], 400);
+        }
+
+        // Get total count of surat records for this NIK
+        $totalSurat = Surat::where('nik_pemohon', $nik)->count();
+
+        // Ambil 3 surat terbaru berdasarkan nik_pemohon dengan pagination
+        $surat = Surat::where('nik_pemohon', $nik)
+                     ->latest()
+                     ->paginate(3);
+
+        if ($surat->isEmpty()) {
+            return response()->json([
+                'message' => 'Tidak ada surat ditemukan untuk NIK ini',
+                'total_surat' => 0
+            ], 404);
+        }
+
+        // Add total count to the response
+        $response = $surat->toArray();
+        $response['total_surat'] = $totalSurat;
+
+        return response()->json($response);
+    }
+
     public function update(Request $request, string $id)
     {
         $surat = Surat::findOrFail($id);
