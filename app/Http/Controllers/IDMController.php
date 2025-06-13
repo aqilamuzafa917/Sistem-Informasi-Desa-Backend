@@ -3,7 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\IDM;
+use App\Models\VariabelIDM;
+use Illuminate\Database\Eloquent\Casts\AsArrayObject;
 use Illuminate\Http\Request;
+
+use function Pest\Laravel\json;
 
 class IDMController extends Controller
 {
@@ -12,8 +16,7 @@ class IDMController extends Controller
      */
     public function index()
     {
-        $idm = IDM::all();
-        return response()->json($idm);
+
     }
 
     /**
@@ -21,18 +24,45 @@ class IDMController extends Controller
      */
     public function store(Request $request)
     {
-        $validatedData = $request->validate([
-            'tahun' => 'required|integer',
-            'skor_idm' => 'required|numeric',
-            'status_idm' => 'required|string|max:255',
-            'target_status' => 'required|string|max:255',
-            'skor_minimal' => 'required|numeric',
-            'penambahan' => 'required|numeric',
-            'komponen' => 'nullable|json'
+        $skors = $this->calculateScore($request->tahun);
+        $skorIDM = $skors['skorIDM'];
+        $statusList = [
+            ['label' => 'Sangat Tertinggal', 'min' => 0.000],
+            ['label' => 'Tertinggal',        'min' => 0.491],
+            ['label' => 'Berkembang',        'min' => 0.599],
+            ['label' => 'Maju',              'min' => 0.707],
+            ['label' => 'Mandiri',           'min' => 0.815],
+        ];
+        $statusIDM = null;
+        $targetStatus = null;
+        $skorMinimal = null;
+
+        foreach ($statusList as $index => $status) {
+            $min = $status['min'];
+            $max = $statusList[$index + 1]['min'] ?? 1.0;
+
+            if ($skorIDM >= $min && $skorIDM < $max) {
+                $statusIDM = $status['label'];
+
+                $target = $statusList[$index + 1] ?? null;
+                $targetStatus = $target['label'] ?? null;
+                $skorMinimal = $target['min'] ?? null;
+                break;
+            }
+        }
+        $skors->forget('skorIDM');
+        $iDMSebelum = IDM::where('tahun', $request->tahun - 1)->first() ?? 0;
+        $iDM = IDM::create([
+            'tahun' => $request->tahun,
+            'skor_idm' => $skorIDM,
+            'status_idm' => $statusIDM,
+            'target_status' => $targetStatus,
+            'skor_minimal' => $skorMinimal,
+            'penambahan' => $skorIDM - $iDMSebelum->skor_idm ?? 0,
+            'komponen' => $skors->toArray(),
         ]);
 
-        $idm = IDM::create($validatedData);
-        return response()->json($idm, 201);
+        return response()->json($iDM, 201, ['message' => 'Data IDM berhasil ditambahkan']);
     }
 
     /**
@@ -40,17 +70,22 @@ class IDMController extends Controller
      */
     public function show(Request $request, IDM $iDM)
     {
-        if ($iDM) {
-            return response()->json($iDM);
+        $tahun = $request->input('tahun', date('Y'));
+        $iDM = IDM::where('tahun', $tahun)->first();
+        if (!$iDM) {
+            return response()->json(['message' => 'Data IDM tidak ditemukan'], 404);
         }
-        else {
-            $iDM = IDM::where('tahun', $request->tahun)->first();
-            if ($iDM) {
-                return response()->json($iDM);
-            } else {
-                return response()->json(['message' => 'IDM not found'], 404);
-            }
-        }
+
+        $variabelIke = VariabelIDM::where('tahun', $tahun)->where('kategori', 'IKE')->get();
+        $variabelIks = VariabelIDM::where('tahun', $tahun)->where('kategori', 'IKS')->get();
+        $variabelIkl = VariabelIDM::where('tahun', $tahun)->where('kategori', 'IKL')->get();
+
+        return response()->json([
+            'idm' => $iDM,
+            'variabel_ike' => $variabelIke,
+            'variabel_iks' => $variabelIks,
+            'variabel_ikl' => $variabelIkl,
+        ]);
     }
 
     /**
@@ -58,18 +93,7 @@ class IDMController extends Controller
      */
     public function update(Request $request, IDM $iDM)
     {
-        $validatedData = $request->validate([
-            'tahun' => 'sometimes|required|integer',
-            'skor_idm' => 'sometimes|required|numeric',
-            'status_idm' => 'sometimes|required|string|max:255',
-            'target_status' => 'sometimes|required|string|max:255',
-            'skor_minimal' => 'sometimes|required|numeric',
-            'penambahan' => 'sometimes|required|numeric',
-            'komponen' => 'nullable|json'
-        ]);
-
-        $iDM->update($validatedData);
-        return response()->json($iDM);
+        
     }
 
     /**
@@ -79,5 +103,35 @@ class IDMController extends Controller
     {
         $iDM->delete();
         return response()->json(null, 204);
+    }
+
+    public function casts() : array
+    {
+        return [
+            'komponen' => AsArrayObject::class,
+        ];
+    }
+
+    public function calculateScore(int $tahun)
+    {
+        $variabelIke = VariabelIDM::where('tahun', $tahun)->where('kategori', 'IKE')->get();
+        $variabelIks = VariabelIDM::where('tahun', $tahun)->where('kategori', 'IKS')->get();
+        $variabelIkl = VariabelIDM::where('tahun', $tahun)->where('kategori', 'IKL')->get();
+
+        $totalSkorIke = $variabelIke->sum('skor');
+        $totalSkorIks = $variabelIks->sum('skor');
+        $totalSkorIkl = $variabelIkl->sum('skor');
+        
+        $skorIke = $totalSkorIke / (5 * $variabelIke->count());
+        $skorIks = $totalSkorIks / (5 * $variabelIks->count());
+        $skorIkl = $totalSkorIkl / (5 * $variabelIkl->count());
+        $skorIdm = ($totalSkorIke + $totalSkorIks + $totalSkorIkl) / 3;
+
+        return collect([
+            'skorIKE' => $skorIke,
+            'skorIKS' => $skorIks,
+            'skorIKL' => $skorIkl,
+            'skorIDM' => $skorIdm, 
+        ]);
     }
 }

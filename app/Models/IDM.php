@@ -26,6 +26,6 @@ class IDM extends Model
         'target_status' => 'string',
         'skor_minimal' => 'float',
         'penambahan' => 'float',
-        'komponen' => 'json',
+        'komponen' => 'array',
     ];
 }
