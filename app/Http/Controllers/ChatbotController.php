@@ -413,7 +413,8 @@ class ChatbotController extends Controller
             $hour >= 5 && $hour < 12 => "Selamat Pagi",
             $hour >= 12 && $hour < 15 => "Selamat Siang",
             $hour >= 15 && $hour < 19 => "Selamat Sore",
-            default => "Selamat Malam"
+            $hour >= 19 && $hour < 24 => "Selamat Malam",
+            default => "Selamat Pagi"
         };
 
         return <<<PROMPT
@@ -453,19 +454,19 @@ class ChatbotController extends Controller
         Gunakan informasi ini untuk menjawab pertanyaan umum dan untuk menentukan kapan harus memanggil fungsi.
         
         **1. Cek Status Pengajuan Surat 📊 (`get_surat_by_nik`)**
-           - **Pemicu:** Pengguna bertanya tentang status atau progres surat. "cek status surat saya". Anda **wajib** meminta NIK jika belum diberikan.
+           - **Pemicu:** Pengguna bertanya tentang status atau progres surat yang telah diajukan. "cek status surat saya", "lacak pengajuan", "surat saya sudah jadi belum?". Anda **wajib** meminta NIK jika belum diberikan.
            - **URL Halaman Terkait:** {$websiteDesa}/cekstatussurat
         
         **2. Artikel & Berita Desa 📰 (`get_artikel_list`, `get_artikel_by_id`)**
-           - **Pemicu:** Pengguna bertanya tentang berita, pengumuman, atau artikel. "berita terbaru". Panggil `get_artikel_list`. Jika pengguna menyebutkan ID artikel, panggil `get_artikel_by_id`.
+           - **Pemicu:** Pengguna bertanya tentang berita terbaru, pengumuman, atau artikel. "berita terbaru", "pengumuman desa", "info kegiatan", "baca artikel". Panggil `get_artikel_list`. Jika pengguna menyebutkan ID artikel, panggil `get_artikel_by_id`.
            - **URL Halaman Terkait:** {$websiteDesa}/artikeldesa
         
         **3. Laporan Anggaran Desa (APBDes) 💰 (`get_laporan_apbdesa`)**
-           - **Pemicu:** Pengguna bertanya tentang anggaran, dana desa, APBDes. "laporan apbdes tahun 2023".
+           - **Pemicu:** Pengguna bertanya tentang anggaran, dana desa, APBDes, pendapatan, atau belanja desa. "dana desa", "anggaran desa", "laporan apbdes tahun 2023".
            - **URL Halaman Terkait:** {$websiteDesa}/infografis/apbdesa
 
         **4. Statistik Kependudukan 👥 (`get_statistik_penduduk`)**
-           - **Pemicu:** Pengguna bertanya tentang data demografi atau statistik penduduk. "jumlah penduduk".
+           - **Pemicu:** Pengguna bertanya tentang data demografi, jumlah penduduk, statistik warga, berapa banyak laki-laki/perempuan, data usia, agama, pekerjaan, atau pendidikan. "jumlah penduduk", "data demografi", "statistik warga".
            - **URL Halaman Terkait:** {$websiteDesa}/infografis/penduduk
         
         **5. Informasi Umum (Tanpa Fungsi)**
@@ -476,31 +477,45 @@ class ChatbotController extends Controller
         Setelah `functionResponse` diterima, Anda **WAJIB** mengikuti format di bawah ini.
         
         **1. Untuk `get_surat_by_nik`:**
+           - **Aturan:** Selalu berikan ringkasan di awal. Gunakan `---` sebagai pemisah **di antara setiap detail surat**. Format jenis surat: "SK [Jenis Surat]" (contoh: "SK Domisili", "SK Usaha", "SK Kematian").
            - **Jika `status: success`:**
              ```
-             📋 **Ringkasan Status Pengajuan Surat**
-             NIK: **[data.nik]**
-        
-             📊 **Statistik Pengajuan**
-             Total pengajuan surat: **[data.total_surat]** surat
-        
-             📝 **Ringkasan 3 Pengajuan Terbaru**
-             [Ringkasan bebas dari chatbot tentang status surat-surat tersebut]
-        
-             [Untuk setiap item di 'data.surat_terbaru':]
-             - **[item.jenis_surat]** ([item.status_surat])
-               Tanggal Diajukan: [item.tanggal_pengajuan]
-               [Jika status 'Disetujui':]
-               Nomor Surat: **[item.nomor_surat]**
-               [Jika status 'Ditolak':]
-               Catatan: [item.catatan]
-        
-             🔍 **Informasi Tambahan**
-             Untuk melihat riwayat lengkap, kunjungi [Halaman Cek Status Surat]({$websiteDesa}/cekstatussurat).
+             📋 **Status Pengajuan Surat Anda**
+
+             Berikut adalah 3 pengajuan surat terakhir untuk NIK **[data.nik]**:
+
+             [Ringkasan bebas dari chatbot, contoh: "Dari 3 pengajuan terakhir, 1 surat telah disetujui dan siap diambil, sementara 2 lainnya sedang dalam proses verifikasi. Berikut rinciannya:"]
+
+             [LOOP 'item' IN data.surat_terbaru:]
+             ---
+             [IF item.status_surat == 'Disetujui':]
+             ✅ **SK [format_jenis_surat(item.jenis_surat)] - Disetujui**
+             - **Tanggal Disetujui:** [format_tanggal(item.tanggal_disetujui)]
+             - **Nomor Surat:** `[item.nomor_surat]`
+             - 💡 Surat dapat diambil di kantor desa pada jam kerja.
+             [ENDIF]
+
+             [IF item.status_surat == 'Diajukan':]
+             ⏳ **SK [format_jenis_surat(item.jenis_surat)] - Sedang Diproses**
+             - **Tanggal Diajukan:** [format_tanggal(item.tanggal_pengajuan)]
+             - 💡 Pengajuan Anda sedang dalam antrian verifikasi petugas. Mohon tunggu informasi selanjutnya.
+             [ENDIF]
+
+             [IF item.status_surat == 'Ditolak':]
+             ❌ **SK [format_jenis_surat(item.jenis_surat)] - Ditolak**
+             - **Tanggal Diproses:** [format_tanggal(item.tanggal_ditolak)]
+             - **Alasan Penolakan:** [item.catatan]
+             - 💡 Silakan perbaiki pengajuan Anda sesuai catatan di atas atau hubungi kantor desa untuk bantuan.
+             [ENDIF]
+             [ENDLOOP]
+             
+             ---
+             🔍 Untuk melihat riwayat lengkap, kunjungi [Halaman Cek Status Surat]({$websiteDesa}/cekstatussurat).
              ```
            - **Jika `status: not_found`:**
              ```
-             ❌ **Mohon maaf**, tidak ditemukan pengajuan surat dengan NIK tersebut. Silakan periksa kembali NIK Anda atau kunjungi [Halaman Pengajuan Surat]({$websiteDesa}/pengajuansurat) untuk membuat pengajuan baru.
+             ❌ **NIK Tidak Ditemukan**
+             Mohon maaf, tidak ditemukan riwayat pengajuan surat dengan NIK **[nik_yang_diminta]**. Pastikan NIK sudah benar, atau ajukan surat baru melalui [Halaman Pengajuan Surat]({$websiteDesa}/pengajuansurat).
              ```
         
         **2. Untuk `get_artikel_list`:**
