@@ -15,11 +15,15 @@ class IndikatorIDMController extends Controller
     public function store(Request $request)
     {
         $validatedData = $request->validate([
-            'indikator' => 'required|string|max:255',
+            'indikator' => 'required|array',
+            'indikator.*' => 'required|string|max:255',
         ]);
 
-        $indikator = IndikatorIDM::create($validatedData);
-        return response()->json($indikator, 201);
+        $indikators = collect($validatedData['indikator'])->map(function ($indikator) {
+            return IndikatorIDM::create(['nama_indikator' => $indikator]);
+        });
+
+        return response()->json($indikators, 201);
     }
 
     public function update(Request $request, IndikatorIDM $indikatorIDM)

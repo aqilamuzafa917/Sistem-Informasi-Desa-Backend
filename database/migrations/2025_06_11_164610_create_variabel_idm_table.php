@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('kegiatan')->nullable();
             $table->float('nilai_plus', 5, 3)->nullable();
             $table->json('pelaksana')->nullable();
-            $table->enum('kategori', ['A', 'B', 'C', 'D'])->default('D');
+            $table->enum('kategori', ['IKE', 'IKS', 'IKL'])->default('IKE');
             $table->integer('tahun');
 
             // Foreign key constraint
