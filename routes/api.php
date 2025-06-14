@@ -85,6 +85,10 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
     Route::get('/user-list', [AuthController::class, 'getAllUsers']); // Get all users with pagination
+     // User management routes
+    Route::post('/users/{id}/revoke', [AuthController::class, 'revokeUser']);
+    Route::post('/users/{id}/reactivate', [AuthController::class, 'reactivateUser']);
+    Route::get('/users', [AuthController::class, 'getAllUsers']);
 
     // CRUD Surat (Admin)
     Route::get('/surat', [SuratController::class, 'index']);   // Admin melihat daftar semua surat
