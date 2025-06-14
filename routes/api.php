@@ -184,5 +184,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/idm/{tahun}', [App\Http\Controllers\IDMController::class, 'show']); // Mendapatkan data IDM
     Route::put('/idm/{tahun}', [App\Http\Controllers\IDMController::class, 'update']); // Memperbarui data IDM
     Route::delete('/idm/{tahun}', [App\Http\Controllers\IDMController::class, 'destroy']); // Menghapus data IDM
+
+    // Routes untuk Indikator IDM
+    Route::post('/indikator-idm', [App\Http\Controllers\IndikatorIDMController::class, 'store']); // Menyimpan indikator IDM
+    Route::put('/indikator-idm/{indikatorIDM}', [App\Http\Controllers\IndikatorIDMController::class, 'update']); // Memperbarui indikator IDM
+    Route::delete('/indikator-idm/{indikatorIDM}', [App\Http\Controllers\IndikatorIDMController::class, 'destroy']); // Menghapus indikator IDM
 });
 

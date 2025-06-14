@@ -9,8 +9,7 @@ class IndikatorIDMController extends Controller
 {
     public function index()
     {
-        $indikator = IndikatorIDM::all();
-        return $indikator;
+        
     }
 
     public function store(Request $request)
