@@ -22,9 +22,9 @@ class IDMController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request, int $tahun)
     {
-        $skors = $this->calculateScore($request->tahun);
+        $skors = $this->calculateScore($tahun);
         $skorIDM = $skors['skorIDM'];
         $statusList = [
             ['label' => 'Sangat Tertinggal', 'min' => 0.000],
@@ -51,9 +51,9 @@ class IDMController extends Controller
             }
         }
         $skors->forget('skorIDM');
-        $iDMSebelum = IDM::where('tahun', $request->tahun - 1)->first() ?? 0;
+        $iDMSebelum = IDM::where('tahun', $tahun - 1)->first() ?? 0;
         $iDM = IDM::create([
-            'tahun' => $request->tahun,
+            'tahun' => $tahun,
             'skor_idm' => $skorIDM,
             'status_idm' => $statusIDM,
             'target_status' => $targetStatus,
@@ -68,9 +68,8 @@ class IDMController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Request $request, IDM $iDM)
+    public function show(Request $request, int $tahun)
     {
-        $tahun = $request->input('tahun', date('Y'));
         $iDM = IDM::where('tahun', $tahun)->first();
         if (!$iDM) {
             return response()->json(['message' => 'Data IDM tidak ditemukan'], 404);

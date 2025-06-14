@@ -13,14 +13,18 @@ return new class extends Migration
     {
         Schema::create('idm', function (Blueprint $table) {
             $table->id();
-            $table->integer('tahun');
-            $table->float('skor_idm');
+            $table->integer('tahun')->unique();
+            $table->float('skor_idm', 5, 3);
             $table->string('status_idm');
-            $table->string('target_status');
-            $table->float('skor_minimal');
-            $table->float('penambahan');
+            $table->string('target_status')->nullable();
+            $table->float('skor_minimal', 5, 3)->nullable();
+            $table->float('penambahan')->nullable();
             $table->json('komponen')->nullable();
             $table->timestamps();
+
+            // Indexes
+            $table->index(['tahun']);
+            $table->index(['skor_idm']);
         });
     }
 

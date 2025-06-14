@@ -13,15 +13,26 @@ return new class extends Migration
     {
         Schema::create('variabel_idm', function (Blueprint $table) {
             $table->id();
-            $table->timestamps();
             $table->string('indikator_idm');
             $table->integer('skor');
-            $table->string('keterangan');
-            $table->string('kegiatan');
-            $table->float('nilai_plus')->nullable();
+            $table->string('keterangan')->nullable();
+            $table->string('kegiatan')->nullable();
+            $table->float('nilai_plus', 5, 3)->nullable();
             $table->json('pelaksana')->nullable();
-            $table->enum('kategori', ['IKL', 'IKE', 'IKS']);
+            $table->enum('kategori', ['A', 'B', 'C', 'D'])->default('D');
             $table->integer('tahun');
+
+            // Foreign key constraint
+            $table->foreign('indikator_idm')
+                ->references('nama_indikator')
+                ->on('indikator_idm')
+                ->onDelete('cascade');
+
+            // Indexes
+            $table->index(['indikator_idm']);
+            $table->index(['tahun']);
+
+            $table->timestamps();
         });
     }
 
@@ -30,6 +41,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('variabel_i_d_m_s');
+        Schema::dropIfExists('variabel_idm');
     }
 };
