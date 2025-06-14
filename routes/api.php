@@ -171,24 +171,25 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/desa-config', [DesaConfigController::class, 'updateConfig']);
 
     // CRUD Potensi (Map)
-    Route::get('/map/poi', [MapController::class, 'show']); // Mendapatkan data POI
+    Route::get('/map/poi', [MapController::class, 'getPOI']); // Mendapatkan data POI
     Route::post('/map/poi', [MapController::class, 'store']); // Menambahkan POI baru
     Route::put('/map/poi/{id}', [MapController::class, 'update']); // Memperbarui POI
     Route::delete('/map/poi/{id}', [MapController::class, 'destroy']); // Menghapus POI
 
     // Routes untuk Menambahkan Variabel IDM -> hit ini dulu baru hit IDM
-    Route::get('/variabel-idm', [App\Http\Controllers\VariabelIDMController::class, 'create']); // Mendapatkan daftar indikator IDM
+    Route::get('/variabel-idm', [App\Http\Controllers\VariabelIDMController::class, 'show']); // Mendapatkan daftar indikator IDM
     Route::post('/variabel-idm', [App\Http\Controllers\VariabelIDMController::class, 'store']); // Menyimpan variabel IDM
     Route::get('/variabel-idm/{variabelIDM}', [App\Http\Controllers\VariabelIDMController::class, 'edit']); // Mengedit variabel IDM
     Route::put('/variabel-idm/{variabelIDM}', [App\Http\Controllers\VariabelIDMController::class, 'update']); // Memperbarui variabel IDM
     Route::delete('/variabel-idm/{variabelIDM}', [App\Http\Controllers\VariabelIDMController::class, 'destroy']); // Menghapus variabel IDM
 
     // Routes utama IDM
+    Route::get('/idm', [App\Http\Controllers\IDMController::class, 'indexall']); // Mendapatkan semua data IDM
     Route::post('/idm/{tahun}', [App\Http\Controllers\IDMController::class, 'store']); // Menyimpan data IDM
     Route::get('/idm/{tahun}', [App\Http\Controllers\IDMController::class, 'show']); // Mendapatkan data IDM
     Route::put('/idm/{tahun}', [App\Http\Controllers\IDMController::class, 'update']); // Memperbarui data IDM
     Route::delete('/idm/{tahun}', [App\Http\Controllers\IDMController::class, 'destroy']); // Menghapus data IDM
-
+   
     // Routes untuk Indikator IDM
     Route::post('/indikator-idm', [App\Http\Controllers\IndikatorIDMController::class, 'store']); // Menyimpan indikator IDM
     Route::put('/indikator-idm/{indikatorIDM}', [App\Http\Controllers\IndikatorIDMController::class, 'update']); // Memperbarui indikator IDM

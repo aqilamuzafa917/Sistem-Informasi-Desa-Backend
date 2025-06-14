@@ -15,7 +15,34 @@ class VariabelIDMController extends Controller
      */
     public function show()
     {
-        
+        try {
+            $variabelIDM = VariabelIDM::orderBy('tahun', 'desc')
+                ->orderBy('kategori')
+                ->get()
+                ->groupBy('kategori');
+
+            if ($variabelIDM->isEmpty()) {
+                return response()->json([
+                    'message' => 'Tidak ada data variabel IDM yang tersedia',
+                    'error' => 'Data tidak ditemukan'
+                ], 404);
+            }
+
+            return response()->json([
+                'message' => 'Data variabel IDM berhasil diambil',
+                'data' => [
+                    'IKE' => $variabelIDM['IKE'] ?? [],
+                    'IKS' => $variabelIDM['IKS'] ?? [],
+                    'IKL' => $variabelIDM['IKL'] ?? []
+                ]
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Terjadi kesalahan saat mengambil data',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

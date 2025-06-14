@@ -14,9 +14,25 @@ class IDMController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function indexall()
     {
+        $idmData = IDM::orderBy('tahun', 'desc')->get();
+        $result = [];
 
+        foreach ($idmData as $idm) {
+            $variabelIke = VariabelIDM::where('tahun', $idm->tahun)->where('kategori', 'IKE')->get();
+            $variabelIks = VariabelIDM::where('tahun', $idm->tahun)->where('kategori', 'IKS')->get();
+            $variabelIkl = VariabelIDM::where('tahun', $idm->tahun)->where('kategori', 'IKL')->get();
+
+            $result[] = [
+                'idm' => $idm,
+                'variabel_ike' => $variabelIke,
+                'variabel_iks' => $variabelIks,
+                'variabel_ikl' => $variabelIkl,
+            ];
+        }
+
+        return response()->json($result);
     }
 
     /**
