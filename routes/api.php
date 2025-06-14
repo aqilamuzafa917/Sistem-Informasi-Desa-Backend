@@ -48,7 +48,7 @@ Route::post('/publik/chatbot/send', [ChatbotController::class, 'sendMessage']); 
 Route::get('/publik/apbdesa', [ApbDesaController::class, 'getLaporanApbDesa']); // 1 Tahun detail
 Route::get('/publik/apbdesa/multi-tahun', [ApbDesaController::class, 'getLaporanMultiTahun']); // Pendapatan Belanja, tahun ke tahun
 Route::get('/publik/apbdesa/statistik', [ApbDesaController::class, 'getStatistikApbDesa']); // Ringkasan Tahun ke Tahun\
-
+Route::get('/publik/apbdesa-chatbot', [ApbDesaController::class, 'getLaporanApbDesaForChatbot']); // Ringkasan Tahun ke Tahun\
 // Rute Publik Pengaduan
 Route::post('/publik/pengaduan', [PengaduanController::class, 'store']); // Membuat pengaduan baru
 // Route untuk generate PDF APB Desa

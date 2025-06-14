@@ -71,10 +71,10 @@ class ChatbotController extends Controller
                 'properties' => [
                     'tahun' => [
                         'type' => 'INTEGER',
-                        'description' => 'Tahun anggaran (misal: 2023). Opsional.'
+                        'description' => 'Tahun anggaran 4 digit yang diminta oleh pengguna (contoh: 2023).'
                     ]
                 ],
-                'required' => []
+                'required' => ['tahun']
             ]
         ],
         [
@@ -134,7 +134,7 @@ class ChatbotController extends Controller
                 case 'get_laporan_apbdesa':
                     $apbDesaController = app(ApbDesaController::class);
                     $request = new Request($args); // Langsung kirim argumen sebagai request
-                    return $apbDesaController->getLaporanApbDesa($request);
+                    return $apbDesaController->getLaporanApbDesaForChatbot($request);
                 
                 case 'get_statistik_penduduk':
                     $PendudukController = app(PendudukController::class);
@@ -246,36 +246,45 @@ class ChatbotController extends Controller
                             // Kita hanya butuh nama fungsinya dari respons awal
                             $functionName = $candidate['content']['parts'][0]['functionCall']['name'];
 
-                            // --- PERBAIKAN FINAL DI SINI ---
                             // Buat ulang objek functionCall HANYA dengan 'name'
                             $functionCallForHistory = ['name' => $functionName];
 
-                            $contents[] = [
+                            $modelTurn = [
                                 'role' => 'model',
-                                'parts' => [[
-                                    'functionCall' => $functionCallForHistory
-                                ]]
+                                'parts' => [['functionCall' => $functionCallForHistory]]
                             ];
-                            // ------------------------------------
 
-                            $contents[] = [
+                            $functionTurn = [
                                 'role' => 'function',
                                 'parts' => [[
                                     'functionResponse' => [
-                                        'name' => $functionName, // Gunakan nama fungsi yang sama
+                                        'name' => $functionName,
                                         'response' => $decodedResponse
                                     ]
                                 ]]
                             ];
-                            
+
                             Log::info("Hasil eksekusi fungsi {$functionName}:", [
                                 'response_content' => $functionResultContent,
                                 'status' => $functionResultResponse->status()
                             ]);
 
                             // LANGKAH 2: Panggilan API Kedua dengan hasil fungsi
-                            Log::info("Melakukan panggilan API kedua dengan hasil dari '{$functionName}'.");
-                            $finalResponse = $this->callGeminiApi($successfulApiKeyData['key'], $contents);
+                            Log::info("Melakukan panggilan API kedua dengan hasil dari '{$functionName}' (tanpa riwayat).");
+
+                            // Buat array 'contents' baru yang bersih untuk panggilan kedua.
+                            // Hanya sertakan pesan user asli, dan giliran model & fungsi.
+                            $contentsForFinalCall = [
+                                // Ambil pesan user terakhir yang memicu function call
+                                end($contents),
+                                // Tambahkan giliran model (functionCall)
+                                $modelTurn,
+                                // Tambahkan giliran fungsi (functionResponse)
+                                $functionTurn
+                            ];
+
+                            // Gunakan $contentsForFinalCall yang bersih, bukan $contents yang berisi riwayat
+                            $finalResponse = $this->callGeminiApi($successfulApiKeyData['key'], $contentsForFinalCall);
 
                             if ($finalResponse->successful()) {
                                 $chatbotReply = $finalResponse->json()['candidates'][0]['content']['parts'][0]['text'] ?? "Saya telah memproses permintaan Anda, namun gagal merangkum hasilnya.";
@@ -358,6 +367,24 @@ class ChatbotController extends Controller
                 'topP' => 0.8,
                 'topK' => 40,
                 'maxOutputTokens' => 2048,
+            ],
+            'safetySettings' => [
+                [
+                    'category' => 'HARM_CATEGORY_HARASSMENT',
+                    'threshold' => 'BLOCK_NONE'
+                ],
+                [
+                    'category' => 'HARM_CATEGORY_HATE_SPEECH',
+                    'threshold' => 'BLOCK_NONE'
+                ],
+                [
+                    'category' => 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+                    'threshold' => 'BLOCK_NONE'
+                ],
+                [
+                    'category' => 'HARM_CATEGORY_DANGEROUS_CONTENT',
+                    'threshold' => 'BLOCK_NONE'
+                ]
             ]
         ];
 
@@ -432,7 +459,8 @@ class ChatbotController extends Controller
         
         ### PRINSIP UTAMA & ATURAN RESPON ###
         1.  **KEBENARAN DATA ADALAH MUTLAK (ATURAN ANTI-HALUSINASI):** Anda **DILARANG KERAS** mengarang, menebak, atau menciptakan data (angka, nama, tanggal, status) yang tidak disediakan secara eksplisit oleh `functionResponse`. Jika sebuah pertanyaan bisa dijawab dengan memanggil fungsi, Anda **WAJIB** memanggil fungsi tersebut. Jawaban Anda harus **100% berdasarkan data yang dikembalikan oleh fungsi**. Jika fungsi mengembalikan status 'not_found' atau 'error', sampaikan pesan error tersebut kepada pengguna sesuai format yang ditentukan. Jangan pernah berkreasi dengan data.
-        2.  **Jadilah Proaktif dan Informatif:** Jangan hanya memberikan tautan. Berikan jawaban ringkas terlebih dahulu, lalu arahkan ke halaman yang relevan untuk detail lebih lanjut.
+        2.  **SELALU VERIFIKASI DENGAN FUNGSI (ATURAN ANTI-HALUSINASI & ANTI-ASUMSI):** Aturan ini adalah yang paling penting. Anda **DILARANG KERAS** berasumsi, menebak, atau mengarang jawaban berdasarkan percakapan sebelumnya. Jika sebuah pertanyaan bisa dijawab dengan memanggil fungsi (seperti status surat, artikel, atau APBDes), Anda **WAJIB MEMANGGIL FUNGSI TERSEBUT SETIAP KALI DITANYAKAN**, bahkan jika pertanyaan yang mirip sebelumnya gagal. Jawaban Anda harus **100% berdasarkan data yang dikembalikan oleh fungsi SAAT INI**, bukan dari memori percakapan.
+        3.  **Jadilah Proaktif dan Informatif:** Jangan hanya memberikan tautan. Berikan jawaban ringkas terlebih dahulu, lalu arahkan ke halaman yang relevan untuk detail lebih lanjut.
             - **Contoh Pertanyaan:** "fitur apa saja yang ada di website?"
             - **Contoh Respons Cerdas:**
               "Website Sistem Informasi Desa {$namaDesa} menyediakan berbagai fitur untuk memudahkan warga:\n\n" .
@@ -447,8 +475,8 @@ class ChatbotController extends Controller
               "   - **Anggaran Desa (APBDes)** 💰: Ringkasan visual pendapatan dan belanja desa. Lihat di [sini]({$websiteDesa}/infografis/apbdesa).\n" .
               "   - **Indeks Desa Membangun (IDM)** 📊: Skor dan status pembangunan desa. Lihat di [sini]({$websiteDesa}/infografis/idm).\n\n" .
               "Ada fitur spesifik yang ingin Anda ketahui lebih lanjut?"
-        3.  **Hindari Pesan Menunggu:** JANGAN PERNAH menampilkan pesan seperti "Mohon tunggu...", "Sedang memproses...". Langsung berikan jawaban akhir.
-        4.  **Eskalasi Cerdas (Upaya Terakhir):** Jika pertanyaan benar-benar di luar cakupan Anda, akui keterbatasan Anda dengan sopan dan sarankan untuk menghubungi kantor desa secara langsung dengan memberikan informasi kontak.
+        4.  **Hindari Pesan Menunggu:** JANGAN PERNAH menampilkan pesan seperti "Mohon tunggu...", "Sedang memproses...". Langsung berikan jawaban akhir.
+        5.  **Eskalasi Cerdas (Upaya Terakhir):** Jika pertanyaan benar-benar di luar cakupan Anda, akui keterbatasan Anda dengan sopan dan sarankan untuk menghubungi kantor desa secara langsung dengan memberikan informasi kontak.
         
         ### BASIS PENGETAHUAN & Pemicu Fungsi ###
         Gunakan informasi ini untuk menjawab pertanyaan umum dan untuk menentukan kapan harus memanggil fungsi.
@@ -462,11 +490,11 @@ class ChatbotController extends Controller
            - **URL Halaman Terkait:** {$websiteDesa}/artikeldesa
         
         **3. Laporan Anggaran Desa (APBDes) 💰 (`get_laporan_apbdesa`)**
-           - **Pemicu:** Pengguna bertanya tentang anggaran, dana desa, APBDes, pendapatan, atau belanja desa. "dana desa", "anggaran desa", "laporan apbdes tahun 2023".
+           - **Pemicu:** Pengguna bertanya tentang anggaran, dana desa, APBDes, pendapatan, atau belanja desa. "dana desa", "anggaran desa", "laporan apbdes tahun 2023".*SELALU panggil fungsi `get_laporan_apbdesa`**, bahkan jika tahun yang ditanyakan berdekatan dengan tahun yang sebelumnya gagal.
            - **URL Halaman Terkait:** {$websiteDesa}/infografis/apbdesa
 
         **4. Statistik Kependudukan 👥 (`get_statistik_penduduk`)**
-           - **Pemicu:** Pengguna bertanya tentang data demografi, jumlah penduduk, statistik warga, berapa banyak laki-laki/perempuan, data usia, agama, pekerjaan, atau pendidikan. "jumlah penduduk", "data demografi", "statistik warga".
+           - **Pemicu:** Pengguna bertanya tentang data demografi, jumlah penduduk, statistik warga, berapa banyak laki-laki/perempuan, data usia, agama, pekerjaan, atau pendidikan. "jumlah penduduk", "data demografi", "statistik warga".*SELALU panggil fungsi 'get_statistik_penduduk'
            - **URL Halaman Terkait:** {$websiteDesa}/infografis/penduduk
         
         **5. Informasi Umum (Tanpa Fungsi)**
@@ -551,18 +579,6 @@ class ChatbotController extends Controller
              - Total Pendapatan: Rp [format_rupiah(data.total_pendapatan)]
              - Total Belanja: Rp [format_rupiah(data.total_belanja)]
              - Sisa Anggaran (Silpa): Rp [format_rupiah(data.saldo_sisa)]
-        
-             ---
-             📈 **Detail Pendapatan**
-             [Untuk setiap 'kategori' => 'jumlah' di 'data.detail_pendapatan':]
-             - **[kategori]:** Rp [format_rupiah(jumlah)]
-             [Jika 'data.detail_pendapatan' kosong, tampilkan: "- Belum ada data realisasi pendapatan."]
-        
-             ---
-             📉 **Detail Belanja**
-             [Untuk setiap 'kategori' => 'jumlah' di 'data.detail_belanja':]
-             - **[kategori]:** Rp [format_rupiah(jumlah)]
-             [Jika 'data.detail_belanja' kosong, tampilkan: "- Belum ada data realisasi belanja."]
         
              💡 **Informasi Tambahan**
              Data ini merupakan realisasi anggaran. Untuk melihat infografis ringkas, kunjungi [Halaman Infografis APBDes]({$websiteDesa}/infografis/apbdesa).
