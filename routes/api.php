@@ -176,8 +176,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/map/poi/{id}', [MapController::class, 'update']); // Memperbarui POI
     Route::delete('/map/poi/{id}', [MapController::class, 'destroy']); // Menghapus POI
 
-    // Routes untuk Menambahkan Variabel IDM -> hit ini dulu baru hit IDM
-    Route::get('/variabel-idm', [App\Http\Controllers\VariabelIDMController::class, 'show']); // Mendapatkan daftar indikator IDM
+    // Routes untuk Menambahkan Variabel IDM -> isi ini dulu sampe semua lengkap, baru hit IDM
+    Route::get('/variabel-idm', [App\Http\Controllers\VariabelIDMController::class, 'create']); // Mendapatkan daftar indikator IDM
     Route::post('/variabel-idm', [App\Http\Controllers\VariabelIDMController::class, 'store']); // Menyimpan variabel IDM
     Route::get('/variabel-idm/{variabelIDM}', [App\Http\Controllers\VariabelIDMController::class, 'edit']); // Mengedit variabel IDM
     Route::put('/variabel-idm/{variabelIDM}', [App\Http\Controllers\VariabelIDMController::class, 'update']); // Memperbarui variabel IDM
