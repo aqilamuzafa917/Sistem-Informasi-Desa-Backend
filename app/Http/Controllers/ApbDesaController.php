@@ -482,7 +482,7 @@ class ApbDesaController extends Controller
     /**
      * Memperbarui atau membuat data total APB Desa berdasarkan tahun
      */
-    protected function updateTotalApbDesa($tahun, Request $request)
+    public function updateTotalApbDesa($tahun, Request $request)
     {
         // Hitung total pendapatan
         $totalPendapatan = RealisasiPendapatan::where('tahun_anggaran', $tahun)

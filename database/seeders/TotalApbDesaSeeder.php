@@ -3,8 +3,12 @@
 namespace Database\Seeders;
 
 use App\Models\TotalApbDesa;
+use App\Models\RealisasiPendapatan;
+use App\Models\RealisasiBelanja;
 use App\Models\User;
+use App\Http\Controllers\ApbDesaController;
 use Illuminate\Database\Seeder;
+use Illuminate\Http\Request;
 
 class TotalApbDesaSeeder extends Seeder
 {
@@ -21,28 +25,22 @@ class TotalApbDesaSeeder extends Seeder
             return;
         }
 
-        $adminId = $admin->id;
+        // Get unique years from both pendapatan and belanja
+        $years = array_unique(array_merge(
+            RealisasiPendapatan::pluck('tahun_anggaran')->toArray(),
+            RealisasiBelanja::pluck('tahun_anggaran')->toArray()
+        ));
 
-        // Data APBDesa 2023
-        TotalApbDesa::create([
-            'tahun_anggaran' => 2023,
-            'total_pendapatan' => 500000000,
-            'total_belanja' => 450000000,
-            'saldo_sisa' => 50000000,
-            'tanggal_pelaporan' => '2023-12-31',
-            'keterangan' => 'APBDesa Tahun 2023',
-            'user_id' => $adminId
-        ]);
+        // Create a mock request with the admin user
+        $request = new Request();
+        $request->setUserResolver(function () use ($admin) {
+            return $admin;
+        });
 
-        // Data APBDesa 2024
-        TotalApbDesa::create([
-            'tahun_anggaran' => 2024,
-            'total_pendapatan' => 550000000,
-            'total_belanja' => 480000000,
-            'saldo_sisa' => 70000000,
-            'tanggal_pelaporan' => '2024-12-31',
-            'keterangan' => 'APBDesa Tahun 2024',
-            'user_id' => $adminId
-        ]);
+        // Use the controller's updateTotalApbDesa function for each year
+        $controller = new ApbDesaController();
+        foreach ($years as $year) {
+            $controller->updateTotalApbDesa($year, $request);
+        }
     }
 } 
