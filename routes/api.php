@@ -48,7 +48,7 @@ Route::post('/publik/chatbot/send', [ChatbotController::class, 'sendMessage']); 
 Route::get('/publik/apbdesa', [ApbDesaController::class, 'getLaporanApbDesa']); // 1 Tahun detail
 Route::get('/publik/apbdesa/multi-tahun', [ApbDesaController::class, 'getLaporanMultiTahun']); // Pendapatan Belanja, tahun ke tahun
 Route::get('/publik/apbdesa/statistik', [ApbDesaController::class, 'getStatistikApbDesa']); // Ringkasan Tahun ke Tahun\
-
+Route::get('/publik/apbdesa-chatbot', [ApbDesaController::class, 'getLaporanApbDesaForChatbot']); // Ringkasan Tahun ke Tahun\
 // Rute Publik Pengaduan
 Route::post('/publik/pengaduan', [PengaduanController::class, 'store']); // Membuat pengaduan baru
 // Route untuk generate PDF APB Desa
@@ -85,6 +85,10 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
     Route::get('/user-list', [AuthController::class, 'getAllUsers']); // Get all users with pagination
+     // User management routes
+    Route::post('/users/{id}/revoke', [AuthController::class, 'revokeUser']);
+    Route::post('/users/{id}/reactivate', [AuthController::class, 'reactivateUser']);
+    Route::get('/users', [AuthController::class, 'getAllUsers']);
 
     // CRUD Surat (Admin)
     Route::get('/surat', [SuratController::class, 'index']);   // Admin melihat daftar semua surat
@@ -167,7 +171,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/desa-config', [DesaConfigController::class, 'updateConfig']);
 
     // CRUD Potensi (Map)
-    Route::get('/map/poi', [MapController::class, 'show']); // Mendapatkan data POI
+    Route::get('/map/poi', [MapController::class, 'getPOI']); // Mendapatkan data POI
     Route::post('/map/poi', [MapController::class, 'store']); // Menambahkan POI baru
     Route::put('/map/poi/{id}', [MapController::class, 'update']); // Memperbarui POI
     Route::delete('/map/poi/{id}', [MapController::class, 'destroy']); // Menghapus POI
@@ -180,11 +184,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/variabel-idm/{variabelIDM}', [App\Http\Controllers\VariabelIDMController::class, 'destroy']); // Menghapus variabel IDM
 
     // Routes utama IDM
+    Route::get('/idm', [App\Http\Controllers\IDMController::class, 'indexall']); // Mendapatkan semua data IDM
     Route::post('/idm/{tahun}', [App\Http\Controllers\IDMController::class, 'store']); // Menyimpan data IDM
     Route::get('/idm/{tahun}', [App\Http\Controllers\IDMController::class, 'show']); // Mendapatkan data IDM
     Route::put('/idm/{tahun}', [App\Http\Controllers\IDMController::class, 'update']); // Memperbarui data IDM
     Route::delete('/idm/{tahun}', [App\Http\Controllers\IDMController::class, 'destroy']); // Menghapus data IDM
-
+   
     // Routes untuk Indikator IDM
     Route::post('/indikator-idm', [App\Http\Controllers\IndikatorIDMController::class, 'store']); // Menyimpan indikator IDM
     Route::put('/indikator-idm/{indikatorIDM}', [App\Http\Controllers\IndikatorIDMController::class, 'update']); // Memperbarui indikator IDM
