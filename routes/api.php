@@ -29,6 +29,9 @@ Route::post('/login', [AuthController::class, 'login']); // Admin login
 // Rute GET Profil Desa
 Route::get('/publik/profil-desa', [ProfilDesaController::class, 'index']); // Mengambil semua data profil desa
 
+// Tambah route cek nik dan tanggal lahir
+Route::post('/publik/cek-nik-tanggal-lahir', [PendudukController::class, 'checkNikTanggalLahir']);
+
 // Rute GET Surat berdasarkan NIK (Publik)
 Route::get('/publik/surat/{nik}', [SuratController::class, 'showByNik']); // Lihat daftar surat berdasarkan NIK pengguna
 Route::get('/publik/surat/{nik}/{id}/pdf', [SuratController::class, 'generatePDF']); // Download PDF surat (jika diinginkan publik)
