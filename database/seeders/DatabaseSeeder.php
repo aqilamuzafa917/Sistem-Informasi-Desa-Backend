@@ -18,6 +18,11 @@ class DatabaseSeeder extends Seeder
             RealisasiBelanjaSeeder::class,
             TotalApbDesaSeeder::class,
             PengaduanSeeder::class,
+            ProfilDesaSeeder::class,
+            IndikatorIdmSeeder::class,
+            VariabelIdmSeeder::class,
+            ArtikelSeeder::class,
+            ArtikelMediaSeeder::class,
         ]);
     }
 }

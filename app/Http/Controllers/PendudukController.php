@@ -15,12 +15,16 @@ use Throwable;
 class PendudukController extends Controller
 {
     public function index(Request $request)
-{
-    $perPage = $request->input('per_page', 10);
-    $penduduk = Penduduk::simplePaginate($perPage);
+    {
+        $perPage = $request->input('per_page', 10);
+        $penduduk = Penduduk::simplePaginate($perPage);
 
-    return response()->json($penduduk);
-}
+        return response()->json([
+            'status' => 'success',
+            'data' => $penduduk,
+            'message' => 'Daftar penduduk berhasil diambil'
+        ]);
+    }
 
     public function searchByNik()
     {
