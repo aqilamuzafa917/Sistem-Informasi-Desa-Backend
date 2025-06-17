@@ -9,13 +9,15 @@ class IndikatorIDM extends Model
     protected $table = 'indikator_idm';
     protected $fillable = [
         'nama_indikator',
+        'kategori',
     ];
 
     protected $casts = [
         'nama_indikator' => 'string',
+        'kategori' => 'string',
     ];
 
-    public $timestamps = false;
+    public $timestamps = true;
 
     public function variabelIDM()
     {

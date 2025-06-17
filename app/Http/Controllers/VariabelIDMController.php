@@ -7,16 +7,17 @@ use App\Models\VariabelIDM;
 use App\Models\IndikatorIDM;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class VariabelIDMController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function show()
+    public function show(int $tahun)
     {
         try {
-            $variabelIDM = VariabelIDM::orderBy('tahun', 'desc')
+            $variabelIDM = VariabelIDM::where('tahun', $tahun)
                 ->orderBy('kategori')
                 ->get()
                 ->groupBy('kategori');
@@ -51,7 +52,7 @@ class VariabelIDMController extends Controller
     public function create(Request $request)
     {
         try {
-            $daftarIndikator = IndikatorIDM::pluck('nama_indikator')->toArray();
+            $daftarIndikator = IndikatorIDM::pluck('kategori', 'nama_indikator')->all();
             if (empty($daftarIndikator)) {
                 return response()->json([
                     'message' => 'Tidak ada indikator IDM yang tersedia',
@@ -59,8 +60,9 @@ class VariabelIDMController extends Controller
                 ], 404);
             }
             return response()->json([
-                'indikator_idm' => $daftarIndikator,
-                'kategori' => KategoriVariabelIDM::class,
+                'IKE' => collect($daftarIndikator)->filter(fn ($kategori) => $kategori === 'IKE')->keys()->values(),
+                'IKS' => collect($daftarIndikator)->filter(fn ($kategori) => $kategori === 'IKS')->keys()->values(),
+                'IKL' => collect($daftarIndikator)->filter(fn ($kategori) => $kategori === 'IKL')->keys()->values(),
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -92,7 +94,7 @@ class VariabelIDMController extends Controller
                 'data.*.kegiatan' => 'nullable|string|max:255',
                 'data.*.nilai_plus' => 'nullable|numeric|min:0',
                 'data.*.pelaksana' => 'nullable|array',
-                'data.*.kategori' => 'required|in:IKE,IKS,IKL',
+                'data.*.kategori' => 'requ  ired|in:IKE,IKS,IKL',
                 'data.*.tahun' => 'required|integer|max:'. date('Y'),
             ]);
 
@@ -121,7 +123,7 @@ class VariabelIDMController extends Controller
                 'data' => $variabelIDM
             ], 201);
 
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             return response()->json([
                 'message' => 'Validasi data gagal',
                 'errors' => $e->errors()
@@ -158,7 +160,10 @@ class VariabelIDMController extends Controller
             return response()->json([
                 'variabel_idm' => $variabelIDM,
                 'indikator_idm' => $daftarIndikator,
-                'kategori' => KategoriVariabelIDM::class,
+                'kategori' => collect(KategoriVariabelIDM::cases())->map(fn ($kategori) => [
+                    'value' => $kategori->value,
+                    'label' => $kategori->label(),
+                ]),
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -210,7 +215,7 @@ class VariabelIDMController extends Controller
                 'data' => $variabelIDM
             ], 200);
 
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             return response()->json([
                 'message' => 'Validasi data gagal',
                 'errors' => $e->errors()
