@@ -5,10 +5,13 @@ namespace App\Models;
 use App\Enums\KategoriPengaduan;
 use App\Enums\StatusPengaduan;
 use Illuminate\Database\Console\Migrations\StatusCommand;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Pengaduan extends Model
 {
+    use HasFactory;
+
     protected $table = 'pengaduan';
 
     protected $fillable = [
@@ -17,10 +20,8 @@ class Pengaduan extends Model
         'kategori',
         'detail_pengaduan',
         'status',
-        'foto',
+        'media',
     ];
-
-    protected $keyType = 'string';
 
     protected $casts = [
         'nama' => 'string',
@@ -28,6 +29,6 @@ class Pengaduan extends Model
         'kategori' => KategoriPengaduan::class,
         'detail_pengaduan' => 'string',
         'status' => StatusPengaduan::class,
-        'foto' => 'string',
+        'media' => 'array',
     ];
 }

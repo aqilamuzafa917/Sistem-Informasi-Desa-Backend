@@ -8,6 +8,7 @@ use App\Services\SupabaseService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 
 class ArtikelController extends Controller
 {
@@ -551,6 +552,99 @@ class ArtikelController extends Controller
                 'disetujui' => $disetujuiCount,
             ],
             'message' => 'Statistik artikel berhasil diambil'
+        ]);
+    }
+
+    /**
+     * Mendapatkan 5 artikel terbaru untuk chatbot.
+     * Versi sederhana dari publicIndex yang hanya menampilkan 5 artikel terbaru.
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function latestPublicIndex(Request $request)
+    {
+        $limit = 5; // Set limit to 5 articles as per documentation
+
+        $query = Artikel::query()
+            ->where('status_artikel', 'disetujui')
+            ->select([
+                'id_artikel',
+                'judul_artikel',
+                'tanggal_publikasi_artikel',
+                'penulis_artikel',
+                'kategori_artikel',
+                'isi_artikel'
+            ])
+            ->orderBy('tanggal_publikasi_artikel', 'desc');
+
+        // Filter berdasarkan kategori jika ada
+        if ($request->has('kategori')) {
+            $query->where('kategori_artikel', $request->kategori);
+        }
+
+        // Get 5 latest articles using take() and get()
+        $artikels = $query->take($limit)->get();
+
+        // Tambahkan rangkuman untuk setiap artikel menggunakan Gemini AI
+        $artikels->transform(function ($artikel) {
+            try {
+                // Bersihkan konten dari HTML tags
+                $isi = strip_tags($artikel->isi_artikel);
+                
+                // Siapkan prompt untuk Gemini
+                $prompt = "Buat rangkuman singkat dan informatif dari artikel berikut dalam 2-3 kalimat:\n\n{$isi}";
+                
+                // Panggil Gemini API untuk membuat rangkuman
+                $response = Http::withHeaders([
+                    'Content-Type' => 'application/json',
+                ])->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" . env('GEMINI_API_KEY'), [
+                    'contents' => [
+                        [
+                            'parts' => [
+                                ['text' => $prompt]
+                            ]
+                        ]
+                    ],
+                    'generationConfig' => [
+                        'temperature' => 0.7,
+                        'topP' => 0.8,
+                        'topK' => 40,
+                        'maxOutputTokens' => 150,
+                    ]
+                ]);
+
+                if ($response->successful()) {
+                    $result = $response->json();
+                    $rangkuman = $result['candidates'][0]['content']['parts'][0]['text'] ?? null;
+                    
+                    if ($rangkuman) {
+                        $artikel->rangkuman = $rangkuman;
+                    } else {
+                        // Fallback jika Gemini gagal membuat rangkuman
+                        $artikel->rangkuman = substr($isi, 0, 150) . '...';
+                    }
+                } else {
+                    // Fallback jika API call gagal
+                    $artikel->rangkuman = substr($isi, 0, 150) . '...';
+                }
+            } catch (\Exception $e) {
+                // Log error dan gunakan fallback
+                Log::error('Error generating article summary:', [
+                    'error' => $e->getMessage(),
+                    'artikel_id' => $artikel->id_artikel
+                ]);
+                $artikel->rangkuman = substr($isi, 0, 150) . '...';
+            }
+            
+            return $artikel;
+        });
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $artikels,
+            'total' => $artikels->count(),
+            'message' => "Berikut adalah {$artikels->count()} artikel terbaru dari desa"
         ]);
     }
 }

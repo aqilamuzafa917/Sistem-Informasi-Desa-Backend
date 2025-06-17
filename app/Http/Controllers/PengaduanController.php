@@ -4,9 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\Pengaduan;
 use Illuminate\Http\Request;
+use App\Services\SupabaseService;
+use Illuminate\Support\Facades\Log;
 
 class PengaduanController extends Controller
 {
+    protected $supabaseService;
+
+    public function __construct(SupabaseService $supabaseService)
+    {
+        $this->supabaseService = $supabaseService;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -26,14 +34,49 @@ class PengaduanController extends Controller
             'nomor_telepon' => 'required|string|max:15',
             'kategori' => 'required|string|max:50',
             'detail_pengaduan' => 'required|string',
-            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:4096',
+            'media' => 'array|nullable',
+            'media.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
         ]);
-
-        if ($request->hasFile('foto')) {
-            $validatedData['foto'] = $request->file('foto')->store('foto_pengaduan', 'public');
-        }
         
+        $mediaFiles = [];
+
+        if ($request->hasFile('media')) {
+            Log::info('Starting upload for pengaduan-media files', [
+                'total_files' => count($request->file('media'))
+            ]);
+
+            foreach ($request->file('media') as $index => $file) {
+                try {
+                    $uploadResult = $this->supabaseService->uploadPengaduanMedia($file);
+                    $signedUrl = $this->supabaseService->getPengaduanMediaUrl($uploadResult);
+
+                    $mediaFiles[] = [
+                        'path' => $uploadResult['path'] ?? null,
+                        'type' => $file->getClientMimeType(),
+                        'name' => $file->getClientOriginalName(),
+                        'url' => $signedUrl
+                    ];
+                } catch (\Exception $e) {
+                    Log::error("Failed to upload media file {$index}", [
+                        'error' => $e->getMessage()
+                    ]);
+
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Gagal mengupload file: ' . $e->getMessage()
+                    ], 500);
+                }
+            }
+
+            Log::info("Finished uploading all pengaduan media", [
+                'uploaded_files' => count($mediaFiles)
+            ]);
+        }
         $validatedData['status'] = 'Diajukan';
+        $validatedData['media'] = $mediaFiles;
+        
 
         $pengaduan = Pengaduan::create($validatedData);
 

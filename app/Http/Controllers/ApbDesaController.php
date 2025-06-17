@@ -482,7 +482,7 @@ class ApbDesaController extends Controller
     /**
      * Memperbarui atau membuat data total APB Desa berdasarkan tahun
      */
-    protected function updateTotalApbDesa($tahun, Request $request)
+    public function updateTotalApbDesa($tahun, Request $request)
     {
         // Hitung total pendapatan
         $totalPendapatan = RealisasiPendapatan::where('tahun_anggaran', $tahun)
@@ -513,6 +513,44 @@ class ApbDesaController extends Controller
     /**
      * Mendapatkan laporan APB Desa berdasarkan tahun
      */
+    public function getLaporanApbDesaForChatbot(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'tahun' => 'required|digits:4|integer', // Jadikan 'required' di sini juga
+        ]);
+        
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validasi gagal: Tahun wajib diisi.',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        
+        // Sekarang kita yakin $request->tahun pasti ada
+        $tahun = (int) $request->tahun;
+        
+        $totalApb = TotalApbDesa::where('tahun_anggaran', $tahun)->first();
+        
+        if (!$totalApb) {
+            return response()->json([
+                'status' => 'not_found', // Gunakan status 'not_found' agar chatbot bisa menangani
+                'message' => 'Data APB Desa untuk tahun ' . $tahun . ' tidak ditemukan'
+            ], 404);
+        }
+        
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'tahun_anggaran' => (int) $tahun,
+                'total_pendapatan' => $totalApb->total_pendapatan,
+                'total_belanja' => $totalApb->total_belanja,
+                'saldo_sisa' => $totalApb->saldo_sisa,
+                'tanggal_pelaporan' => $totalApb->tanggal_pelaporan,
+            ]
+        ]);
+    }
+
     public function getLaporanApbDesa(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -692,6 +730,7 @@ class ApbDesaController extends Controller
             'data' => $hasilLaporan
         ]);
     }
+    
 
     /**
      * Generate PDF laporan APB Desa berdasarkan tahun
