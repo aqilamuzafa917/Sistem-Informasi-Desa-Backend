@@ -282,4 +282,30 @@ class PendudukController extends Controller
             'nama' => implode(' ', $maskedNama)
         ]);
     }
+
+    /**
+     * Mengecek apakah NIK dan tanggal_lahir cocok di database
+     * Request: nik, tanggal_lahir (format: YYYY-MM-DD)
+     * Response: { "result": true } atau { "result": false }
+     */
+    public function checkNikTanggalLahir(Request $request)
+    {
+        $request->validate([
+            'nik' => 'required|string|size:16',
+            'tanggal_lahir' => 'required|date',
+        ]);
+
+        $nik = $request->input('nik');
+        $tanggal_lahir = $request->input('tanggal_lahir');
+
+        $penduduk = Penduduk::where('nik', $nik)
+            ->whereDate('tanggal_lahir', $tanggal_lahir)
+            ->first();
+
+        if ($penduduk) {
+            return response()->json(['result' => true]);
+        } else {
+            return response()->json(['result' => false]);
+        }
+    }
 }

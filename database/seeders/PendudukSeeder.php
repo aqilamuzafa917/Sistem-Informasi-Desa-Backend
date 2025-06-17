@@ -145,11 +145,11 @@ class PendudukSeeder extends Seeder
             // --- Generate Data Keluarga ---
             $noKK = $faker->unique()->numerify('3271############');
             $alamat = $faker->streetAddress;
-            $rt = $faker->numerify('00#');
-            $rw = $faker->numerify('00#');
-            $desa = 'Desa Sukamaju';
-            $kecamatan = 'Kecamatan Maju Jaya';
-            $kabupaten = 'Kabupaten Sejahtera';
+            $rt = $faker->numerify('0##');
+            $rw = $faker->numerify('0##');
+            $desa = 'Desa Batujajar Timur';
+            $kecamatan = 'Kecamatan Batujajar';
+            $kabupaten = 'Kabupaten Bandung Barat';
             $provinsi = 'Jawa Barat';
             $kodePos = $faker->numerify('16###');
             // Agama cenderung sama dalam satu keluarga
@@ -212,6 +212,32 @@ class PendudukSeeder extends Seeder
                         'status_perkawinan' => StatusPerkawinan::BelumMenikah,
                         'pekerjaan' => $this->getPekerjaanByAge($umurAnak, $pekerjaan),
                         'pendidikan' => $this->getPendidikanByAge($umurAnak),
+                    ],
+                    $noKK, $alamat, $rt, $rw, $desa, $kecamatan, $kabupaten, $provinsi, $kodePos, $agamaKeluarga, $kotaLahir
+                );
+            }
+            
+            // --- Lansia (0 sampai 2 lansia per keluarga) ---
+            $jumlahLansia = rand(0, 2);
+            for ($k = 0; $k < $jumlahLansia; $k++) {
+                $lansiaTglLahir = Carbon::parse($faker->dateTimeBetween('-90 years', '-60 years'));
+                $umurLansia = $lansiaTglLahir->age;
+                $jenisKelaminLansia = $faker->randomElement(JenisKelamin::cases());
+                $statusPerkawinanLansia = $faker->randomElement([
+                    StatusPerkawinan::Menikah,
+                    StatusPerkawinan::CeraiHidup,
+                    StatusPerkawinan::CeraiMati
+                ]);
+                $pendudukData[] = $this->generatePendudukData(
+                    $faker,
+                    [
+                        'nik' => $faker->unique()->numerify('3271############'),
+                        'nama' => $faker->name($jenisKelaminLansia === JenisKelamin::LakiLaki ? 'male' : 'female'),
+                        'jenis_kelamin' => $jenisKelaminLansia,
+                        'tanggal_lahir' => $lansiaTglLahir->toDateString(),
+                        'status_perkawinan' => $statusPerkawinanLansia,
+                        'pekerjaan' => $this->getPekerjaanByAge($umurLansia, $pekerjaan),
+                        'pendidikan' => $this->getPendidikanByAge($umurLansia),
                     ],
                     $noKK, $alamat, $rt, $rw, $desa, $kecamatan, $kabupaten, $provinsi, $kodePos, $agamaKeluarga, $kotaLahir
                 );
