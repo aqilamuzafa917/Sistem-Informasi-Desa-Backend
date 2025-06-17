@@ -12,6 +12,7 @@ use App\Http\Controllers\ApbDesaController; // Tambahkan ini
 use App\Http\Controllers\PengaduanController;
 use App\Http\Controllers\MapController;
 use App\Http\Controllers\DesaConfigController;
+use App\Http\Controllers\IDMController;
 
 /*
 |--------------------------------------------------------------------------
@@ -70,9 +71,7 @@ Route::get('/publik/penduduk/{nik}', [PendudukController::class, 'getNamaByNik']
 
 
 // Rute untuk IDM
-Route::get('/publik/idm', [App\Http\Controllers\IDMController::class, 'index']); // Mendapatkan data IDM
-Route::get('/publik/idm/{tahun?}', [App\Http\Controllers\IDMController::class, 'show']); // Mendapatkan data IDM berdasarkan tahun
-
+Route::get('/publik/idm/{tahun}', [App\Http\Controllers\IDMController::class, 'show']); // Mendapatkan data IDM
 
 
 /*
@@ -187,10 +186,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/variabel-idm/{variabelIDM}', [App\Http\Controllers\VariabelIDMController::class, 'destroy']); // Menghapus variabel IDM
 
     // Routes utama IDM
-    Route::post('/idm/{tahun}', [App\Http\Controllers\IDMController::class, 'store']); // Menyimpan data IDM
-    Route::get('/idm/{tahun}', [App\Http\Controllers\IDMController::class, 'show']); // Mendapatkan data IDM
-    Route::put('/idm/{tahun}', [App\Http\Controllers\IDMController::class, 'update']); // Memperbarui data IDM
-    Route::delete('/idm/{tahun}', [App\Http\Controllers\IDMController::class, 'destroy']); // Menghapus data IDM
+    Route::post('/idm/{tahun}/recalculate', [IDMController::class, 'recalculate']);
    
     // Routes untuk Indikator IDM
     Route::post('/indikator-idm', [App\Http\Controllers\IndikatorIDMController::class, 'store']); // Menyimpan indikator IDM
