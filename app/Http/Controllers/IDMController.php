@@ -6,42 +6,18 @@ use App\Models\IDM;
 use App\Models\VariabelIDM;
 use Illuminate\Database\Eloquent\Casts\AsArrayObject;
 use Illuminate\Http\Request;
+use Illuminate\Database\QueryException;
+use Illuminate\Validation\ValidationException;
 
 use function Pest\Laravel\json;
 
 class IDMController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function indexall()
-    {
-        $idmData = IDM::orderBy('tahun', 'desc')->get();
-        $result = [];
-
-        foreach ($idmData as $idm) {
-            $variabelIke = VariabelIDM::where('tahun', $idm->tahun)->where('kategori', 'IKE')->get();
-            $variabelIks = VariabelIDM::where('tahun', $idm->tahun)->where('kategori', 'IKS')->get();
-            $variabelIkl = VariabelIDM::where('tahun', $idm->tahun)->where('kategori', 'IKL')->get();
-
-            $result[] = [
-                'idm' => $idm,
-                'variabel_ike' => $variabelIke,
-                'variabel_iks' => $variabelIks,
-                'variabel_ikl' => $variabelIkl,
-            ];
-        }
-
-        return response()->json($result);
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request, int $tahun)
+    private function generateIDM(int $tahun): IDM
     {
         $skors = $this->calculateScore($tahun);
         $skorIDM = $skors['skorIDM'];
+
         $statusList = [
             ['label' => 'Sangat Tertinggal', 'min' => 0.000],
             ['label' => 'Tertinggal',        'min' => 0.491],
@@ -49,6 +25,7 @@ class IDMController extends Controller
             ['label' => 'Maju',              'min' => 0.707],
             ['label' => 'Mandiri',           'min' => 0.815],
         ];
+
         $statusIDM = null;
         $targetStatus = null;
         $skorMinimal = null;
@@ -59,26 +36,26 @@ class IDMController extends Controller
 
             if ($skorIDM >= $min && $skorIDM < $max) {
                 $statusIDM = $status['label'];
-
                 $target = $statusList[$index + 1] ?? null;
                 $targetStatus = $target['label'] ?? null;
                 $skorMinimal = $target['min'] ?? null;
                 break;
             }
         }
+
         $skors->forget('skorIDM');
-        $iDMSebelum = IDM::where('tahun', $tahun - 1)->first() ?? 0;
-        $iDM = IDM::create([
+
+        $iDMSebelum = IDM::where('tahun', $tahun - 1)->first();
+
+        return IDM::create([
             'tahun' => $tahun,
             'skor_idm' => $skorIDM,
-            'status_idm' => $statusIDM,
+            'status_idm' => $statusIDM ?? '-',
             'target_status' => $targetStatus,
             'skor_minimal' => $skorMinimal,
-            'penambahan' => $skorIDM - $iDMSebelum->skor_idm ?? 0,
+            'penambahan' => $skorIDM - ($iDMSebelum->skor_idm ?? 0),
             'komponen' => $skors->toArray(),
         ]);
-
-        return response()->json($iDM, 201, ['message' => 'Data IDM berhasil ditambahkan']);
     }
 
     /**
@@ -87,8 +64,16 @@ class IDMController extends Controller
     public function show(Request $request, int $tahun)
     {
         $iDM = IDM::where('tahun', $tahun)->first();
+
         if (!$iDM) {
-            return response()->json(['message' => 'Data IDM tidak ditemukan'], 404);
+            try {
+                $iDM = $this->generateIDM($tahun);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'message' => 'Data IDM tidak tersedia dan gagal dihitung',
+                    'error' => $e->getMessage()
+                ], 500);
+            }
         }
 
         $variabelIke = VariabelIDM::where('tahun', $tahun)->where('kategori', 'IKE')->get();
@@ -103,21 +88,30 @@ class IDMController extends Controller
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, IDM $iDM)
+    public function recalculate(Request $request, int $tahun)
     {
-        
-    }
+        try {
+            // Hapus data IDM tahun tersebut jika sudah ada
+            IDM::where('tahun', $tahun)->delete();
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(IDM $iDM)
-    {
-        $iDM->delete();
-        return response()->json(null, 204);
+            // Hitung ulang & simpan
+            $iDM = $this->generateIDM($tahun);
+
+            return response()->json([
+                'message' => 'Data IDM berhasil dihitung ulang',
+                'data' => $iDM
+            ]);
+        } catch (QueryException $e) {
+            return response()->json([
+                'message' => 'Kesalahan saat menyimpan data IDM',
+                'error' => $e->getMessage()
+            ], 500);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Terjadi kesalahan saat menghitung ulang IDM',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function casts() : array
@@ -140,7 +134,7 @@ class IDMController extends Controller
         $skorIke = $totalSkorIke / (5 * $variabelIke->count());
         $skorIks = $totalSkorIks / (5 * $variabelIks->count());
         $skorIkl = $totalSkorIkl / (5 * $variabelIkl->count());
-        $skorIdm = ($totalSkorIke + $totalSkorIks + $totalSkorIkl) / 3;
+        $skorIdm = ($skorIke + $skorIks + $skorIkl) / 3;
 
         return collect([
             'skorIKE' => $skorIke,

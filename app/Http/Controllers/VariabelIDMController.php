@@ -158,12 +158,7 @@ class VariabelIDMController extends Controller
             }
 
             return response()->json([
-                'variabel_idm' => $variabelIDM,
-                'indikator_idm' => $daftarIndikator,
-                'kategori' => collect(KategoriVariabelIDM::cases())->map(fn ($kategori) => [
-                    'value' => $kategori->value,
-                    'label' => $kategori->label(),
-                ]),
+                'variabel_idm' => $variabelIDM
             ]);
         } catch (\Exception $e) {
             return response()->json([

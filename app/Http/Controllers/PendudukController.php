@@ -17,7 +17,7 @@ class PendudukController extends Controller
     public function index(Request $request)
 {
     $perPage = $request->input('per_page', 10);
-    $penduduk = Penduduk::simplePaginate($perPage);
+    $penduduk = Penduduk::paginate($perPage);
 
     return response()->json($penduduk);
 }
