@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             RealisasiPendapatanSeeder::class,
             RealisasiBelanjaSeeder::class,
             TotalApbDesaSeeder::class,
+            PengaduanSeeder::class,
         ]);
     }
 }

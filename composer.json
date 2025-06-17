@@ -12,12 +12,13 @@
         "php": "^8.2",
         "barryvdh/laravel-dompdf": "^3.1",
         "brick/geo": "^0.13.1",
+        "doctrine/dbal": "^4.2",
         "geo-io/geojson": "^1.0",
         "laravel/framework": "^12.0",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
         "league/commonmark": "2.7.0",
-        "spatie/async": "1.7.0",
+        "spatie/async": "^1.6",
         "spatie/laravel-collection-macros": "^8.0"
     },
     "require-dev": {
