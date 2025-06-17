@@ -14,11 +14,13 @@ use Throwable;
 
 class PendudukController extends Controller
 {
-    public function index()
-    {
-        $penduduk = Penduduk::all();
-        return response()->json($penduduk);
-    }
+    public function index(Request $request)
+{
+    $perPage = $request->input('per_page', 10);
+    $penduduk = Penduduk::simplePaginate($perPage);
+
+    return response()->json($penduduk);
+}
 
     public function searchByNik()
     {

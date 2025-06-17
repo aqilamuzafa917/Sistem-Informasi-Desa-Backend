@@ -143,7 +143,7 @@ class PendudukSeeder extends Seeder
 
         for ($i = 0; $i < $jumlahKeluarga; $i++) {
             // --- Generate Data Keluarga ---
-            $noKK = $faker->unique()->numerify('3271##########');
+            $noKK = $faker->unique()->numerify('3271############');
             $alamat = $faker->streetAddress;
             $rt = $faker->numerify('00#');
             $rw = $faker->numerify('00#');
@@ -162,7 +162,7 @@ class PendudukSeeder extends Seeder
             $pendudukData[] = $this->generatePendudukData(
                 $faker,
                 [
-                    'nik' => $faker->unique()->numerify('3271##########'),
+                    'nik' => $faker->unique()->numerify('3271############'),
                     'nama' => $faker->name('male'),
                     'jenis_kelamin' => JenisKelamin::LakiLaki,
                     'tanggal_lahir' => $kepalaKeluargaTglLahir->toDateString(),
@@ -205,7 +205,7 @@ class PendudukSeeder extends Seeder
                 $pendudukData[] = $this->generatePendudukData(
                     $faker,
                     [
-                        'nik' => $faker->unique()->numerify('3271##########'),
+                        'nik' => $faker->unique()->numerify('3271############'),
                         'nama' => $faker->name(),
                         'jenis_kelamin' => $faker->randomElement(JenisKelamin::cases()),
                         'tanggal_lahir' => $anakTglLahir->toDateString(),
