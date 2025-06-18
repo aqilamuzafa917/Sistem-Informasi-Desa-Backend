@@ -143,4 +143,37 @@ class IDMController extends Controller
             'skorIDM' => $skorIdm, 
         ]);
     }
+
+    /**
+     * Display a listing of all IDM data.
+     */
+    public function index()
+    {
+        $allIDM = IDM::orderBy('tahun', 'desc')->get();
+        
+        $result = [];
+        foreach ($allIDM as $idm) {
+            $variabelIke = VariabelIDM::where('tahun', $idm->tahun)->where('kategori', 'IKE')->get();
+            $variabelIks = VariabelIDM::where('tahun', $idm->tahun)->where('kategori', 'IKS')->get();
+            $variabelIkl = VariabelIDM::where('tahun', $idm->tahun)->where('kategori', 'IKL')->get();
+
+            $result[] = [
+                'idm' => $idm,
+                'variabel_ike' => $variabelIke,
+                'variabel_iks' => $variabelIks,
+                'variabel_ikl' => $variabelIkl,
+            ];
+        }
+
+        return response()->json($result);
+    }
+
+    /**
+     * Display IDM statistics for all years.
+     */
+    public function stats()
+    {
+        $allIDM = IDM::orderBy('tahun', 'desc')->get();
+        return response()->json($allIDM);
+    }
 }

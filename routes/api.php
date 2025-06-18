@@ -75,6 +75,8 @@ Route::get('/publik/penduduk/{nik}', [PendudukController::class, 'getNamaByNik']
 
 // Rute untuk IDM
 Route::get('/publik/idm/{tahun}', [App\Http\Controllers\IDMController::class, 'show']); // Mendapatkan data IDM
+Route::get('/publik/idm', [App\Http\Controllers\IDMController::class, 'index']); // Mendapatkan semua data IDM
+Route::get('/publik/idm-stats', [App\Http\Controllers\IDMController::class, 'stats']); // Mendapatkan statistik IDM semua tahun
 
 
 /*
