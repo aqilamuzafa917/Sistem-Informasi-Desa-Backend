@@ -66,6 +66,7 @@ Route::get('/publik/profil-desa/{id}/identitas', [ProfilDesaController::class, '
 // Routes untuk API Map (POI)
 Route::get('/publik/map', [MapController::class, 'getBoundary']); // Mendapatkan data peta
 Route::get('/publik/map/poi', [MapController::class, 'getPOI']); // Mendapatkan data POI berdasarkan amenity
+Route::get('/publik/map/poi/{kategori}', [MapController::class, 'showByKategori']); // Mendapatkan data POI berdasarkan kategori
 Route::get('/publik/desa-config', [DesaConfigController::class, 'getConfig']);
 
 Route::get('/publik/penduduk/stats', [PendudukController::class, 'getStatistikPenduduk']);
@@ -175,7 +176,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/desa-config', [DesaConfigController::class, 'updateConfig']);
 
     // CRUD Potensi (Map)
-    Route::get('/map/poi', [MapController::class, 'getPOI']); // Mendapatkan data POI
     Route::post('/map/poi', [MapController::class, 'store']); // Menambahkan POI baru
     Route::put('/map/poi/{id}', [MapController::class, 'update']); // Memperbarui POI
     Route::delete('/map/poi/{id}', [MapController::class, 'destroy']); // Menghapus POI

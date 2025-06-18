@@ -63,9 +63,14 @@ class MapController extends Controller
         return response()->json(null, 204);
     }
 
-    public function show($id)
+    public function showByKategori(Request $request, $kategori)
     {
-        $potensi = PotensiLoc::findOrFail($id);
+        $potensi = PotensiLoc::where('kategori', $kategori)->get();
+
+        if ($potensi->isEmpty()) {
+            return response()->json(['message' => 'Tidak ada potensi ditemukan untuk kategori ini'], 404);
+        }
+
         return response()->json($potensi);
     }
 
