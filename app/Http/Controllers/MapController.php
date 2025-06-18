@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\KategoriPotensi;
 use App\Models\PotensiLoc;
 use App\Models\ProfilDesa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Validation\Rule;
 
 class MapController extends Controller
 {
@@ -15,7 +17,7 @@ class MapController extends Controller
             'nama' => 'required|string',
             'lat' => 'required|numeric',
             'lon' => 'required|numeric',
-            'category' => 'required|string',
+            'kategori' => ['required', 'string', Rule::in([KategoriPotensi::class])],
             'tags' => 'nullable|array',
         ]);
 
