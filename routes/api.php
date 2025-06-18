@@ -127,7 +127,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // CRUD Penduduk (Admin)
     Route::get('/penduduk/stats', [PendudukController::class, 'getStatistikPenduduk']);
-    Route::get('/penduduk', [PendudukController::class, 'index']); // Admin melihat daftar semua penduduk
+    Route::get('/penduduk', [PendudukController::class, 'indexAll']); // Admin melihat daftar semua penduduk
     Route::get('/penduduk/cari', [PendudukController::class, 'searchByNik']); // Admin mencari penduduk berdasarkan NIK
     Route::post('/penduduk', [PendudukController::class, 'addPenduduk']); // Admin menambahkan penduduk baru
     Route::put('/penduduk/{nik}', [PendudukController::class, 'updatePenduduk']); // Admin memperbarui data penduduk

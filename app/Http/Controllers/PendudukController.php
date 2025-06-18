@@ -26,6 +26,17 @@ class PendudukController extends Controller
         ]);
     }
 
+    public function indexAll()
+    {
+        $penduduk = Penduduk::all();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $penduduk,
+            'message' => 'Daftar penduduk berhasil diambil'
+        ]);
+    }
+
     public function searchByNik()
     {
         $query = trim(request()->input('query'));
