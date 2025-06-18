@@ -41,6 +41,7 @@ class Artikel extends Model
         'longitude',
         'location_name',
         'media_artikel',
+        'potensi_id',
     ];
 
     /**
@@ -85,5 +86,13 @@ class Artikel extends Model
                 $artikel->tanggal_publikasi_artikel = now();
             }
         });
+    }
+
+    /**
+     * Relasi ke model PotensiLoc.
+     */
+    public function potensiLoc()
+    {
+        return $this->belongsTo(PotensiLoc::class, 'artikel_id');
     }
 }
