@@ -66,7 +66,10 @@ Route::get('/publik/profil-desa/{id}/identitas', [ProfilDesaController::class, '
 // Routes untuk API Map (POI)
 Route::get('/publik/map', [MapController::class, 'getBoundary']); // Mendapatkan data peta
 Route::get('/publik/map/poi', [MapController::class, 'getPOI']); // Mendapatkan data POI berdasarkan amenity
+Route::get('/publik/map/poi/all', [MapController::class, 'index']); // Mendapatkan semua data POI
 Route::get('/publik/map/poi/{kategori}', [MapController::class, 'showByKategori']); // Mendapatkan data POI berdasarkan kategori
+
+// Routes untuk API Desa Config
 Route::get('/publik/desa-config', [DesaConfigController::class, 'getConfig']);
 
 Route::get('/publik/penduduk/stats', [PendudukController::class, 'getStatistikPenduduk']);
