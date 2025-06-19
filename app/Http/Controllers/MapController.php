@@ -21,6 +21,7 @@ public function store(Request $request)
             'nama' => 'required|string|max:255',
             'lat' => 'required|numeric',
             'lon' => 'required|numeric',
+            'alamat' => 'required|string|max:255',
             'kategori' => [
                 'required',
                 'string',
@@ -33,6 +34,7 @@ public function store(Request $request)
             'nama' => $request->nama,
             'latitude' => $request->lat,
             'longitude' => $request->lon,
+            'alamat' => $request->alamat,
             'kategori' => $request->kategori,
             'tags' => $request->tags ?? [],
         ]);
@@ -47,6 +49,7 @@ public function store(Request $request)
                 ],
                 'properties' => [
                     'name' => $potensi->nama,
+                    'alamat' => $potensi->alamat ?? 'Tidak ada alamat',
                     'kategori' => $potensi->kategori,
                     'tags' => $potensi->tags,
                 ],
@@ -96,6 +99,7 @@ public function index()
                     ],
                     'properties' => [
                         'name' => $item->nama,
+                        'alamat' => $item->alamat ?? 'Tidak ada alamat',
                         'kategori' => $item->kategori,
                         'tags' => $item->tags,
                     ],
@@ -122,6 +126,7 @@ public function index()
                 ],
                 'properties' => [
                     'name' => $potensi->nama,
+                    'alamat' => $potensi->alamat ?? 'Tidak ada alamat',
                     'kategori' => $potensi->kategori,
                     'tags' => $potensi->tags,
                 ],
@@ -148,6 +153,7 @@ public function index()
                 'nama' => $request->nama,
                 'latitude' => $request->lat,
                 'longitude' => $request->lon,
+                'alamat' => $request->alamat ?? $potensi->alamat,
                 'kategori' => $request->kategori,
                 'tags' => $request->tags ?? [],
             ]);

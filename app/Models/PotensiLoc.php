@@ -12,16 +12,20 @@ class PotensiLoc extends Model
         'nama',
         'latitude',
         'longitude',
+        'alamat',
         'kategori',
-        'tags'
+        'tags',
+        'artikel_id'
     ];
 
     protected $casts = [
         'nama' => 'string',
         'latitude' => 'decimal:7',
         'longitude' => 'decimal:7',
+        'alamat' => 'string',
         'kategori' => 'string',
-        'tags' => 'array'
+        'tags' => 'array',
+        'artikel_id' => 'integer',
     ];
 
     public function scopeWithTags($query, array $tags)
@@ -29,8 +33,4 @@ class PotensiLoc extends Model
         return $query->whereJsonContains('tags', $tags);
     }
     
-    public function artikel()
-    {
-        return $this->hasMany(Artikel::class, 'potensi_id');
-    }
 }
