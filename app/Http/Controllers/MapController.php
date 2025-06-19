@@ -32,6 +32,17 @@ class MapController extends Controller
         return response()->json($potensi, 201);
     }
 
+    public function index()
+    {
+        $potensi = PotensiLoc::all();
+        
+        if ($potensi->isEmpty()) {
+            return response()->json(['message' => 'Tidak ada data potensi ditemukan'], 404);
+        }
+        
+        return response()->json($potensi);
+    }
+
     public function update(Request $request, $id)
     {
         $potensi = PotensiLoc::findOrFail($id);
@@ -51,7 +62,6 @@ class MapController extends Controller
             'kategori' => $request->category,
             'tags' => $request->tags ?? [],
         ]);
-
         return response()->json($potensi);
     }
 
@@ -72,7 +82,6 @@ class MapController extends Controller
         if ($potensi->isEmpty()) {
             return response()->json(['message' => 'Tidak ada potensi ditemukan untuk kategori ini'], 404);
         }
-
         return response()->json($potensi);
     }
 

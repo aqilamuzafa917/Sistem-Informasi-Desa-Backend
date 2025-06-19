@@ -66,7 +66,10 @@ Route::get('/publik/profil-desa/{id}/identitas', [ProfilDesaController::class, '
 // Routes untuk API Map (POI)
 Route::get('/publik/map', [MapController::class, 'getBoundary']); // Mendapatkan data peta
 Route::get('/publik/map/poi', [MapController::class, 'getPOI']); // Mendapatkan data POI berdasarkan amenity
+Route::get('/publik/map/poi/all', [MapController::class, 'index']); // Mendapatkan semua data POI
 Route::get('/publik/map/poi/{kategori}', [MapController::class, 'showByKategori']); // Mendapatkan data POI berdasarkan kategori
+
+// Routes untuk API Desa Config
 Route::get('/publik/desa-config', [DesaConfigController::class, 'getConfig']);
 
 Route::get('/publik/penduduk/stats', [PendudukController::class, 'getStatistikPenduduk']);
@@ -76,6 +79,8 @@ Route::get('/publik/penduduk/{nik}', [PendudukController::class, 'getNamaByNik']
 
 // Rute untuk IDM
 Route::get('/publik/idm/{tahun}', [App\Http\Controllers\IDMController::class, 'show']); // Mendapatkan data IDM
+Route::get('/publik/idm', [App\Http\Controllers\IDMController::class, 'index']); // Mendapatkan semua data IDM
+Route::get('/publik/idm-stats', [App\Http\Controllers\IDMController::class, 'stats']); // Mendapatkan statistik IDM semua tahun
 
 
 /*
@@ -122,7 +127,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // CRUD Penduduk (Admin)
     Route::get('/penduduk/stats', [PendudukController::class, 'getStatistikPenduduk']);
-    Route::get('/penduduk', [PendudukController::class, 'index']); // Admin melihat daftar semua penduduk
+    Route::get('/penduduk', [PendudukController::class, 'indexAll']); // Admin melihat daftar semua penduduk
     Route::get('/penduduk/cari', [PendudukController::class, 'searchByNik']); // Admin mencari penduduk berdasarkan NIK
     Route::post('/penduduk', [PendudukController::class, 'addPenduduk']); // Admin menambahkan penduduk baru
     Route::put('/penduduk/{nik}', [PendudukController::class, 'updatePenduduk']); // Admin memperbarui data penduduk
