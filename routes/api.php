@@ -182,8 +182,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // CRUD Potensi (Map)
     Route::post('/map/poi', [MapController::class, 'store']); // Menambahkan POI baru
-    Route::put('/map/poi/{id}', [MapController::class, 'update']); // Memperbarui POI
-    Route::delete('/map/poi/{id}', [MapController::class, 'destroy']); // Menghapus POI
+    Route::put('/map/poi/{potensi}', [MapController::class, 'update']); // Memperbarui POI
+    Route::delete('/map/poi/{potensi}', [MapController::class, 'destroy']); // Menghapus POI
 
     // Routes untuk Menambahkan Variabel IDM -> isi ini dulu sampe semua lengkap, baru hit IDM
     Route::get('/variabel-idm', [App\Http\Controllers\VariabelIDMController::class, 'create']); // Mendapatkan daftar indikator IDM

@@ -50,6 +50,7 @@ public function store(Request $request)
                     'coordinates' => [$potensi->longitude, $potensi->latitude],
                 ],
                 'properties' => [
+                    'id' => $potensi->id,
                     'name' => $potensi->nama,
                     'alamat' => $potensi->alamat ?? '',
                     'kategori' => $potensi->kategori,
@@ -101,6 +102,7 @@ public function index()
                         'coordinates' => [$item->longitude, $item->latitude],
                     ],
                     'properties' => [
+                        'id' => $item->id,
                         'name' => $item->nama,
                         'alamat' => $item->alamat ?? '',
                         'kategori' => $item->kategori,
@@ -130,7 +132,7 @@ public function index()
                 ],
                 'properties' => [
                     'name' => $potensi->nama,
-                    'alamat' => $potensi->alamat ?? 'Tidak ada alamat',
+                    'alamat' => $potensi->alamat ?? '',
                     'kategori' => $potensi->kategori,
                     'tags' => $potensi->tags,
                     'artikel_id' => $potensi->artikel_id,
@@ -160,16 +162,30 @@ public function index()
                 'nama' => $request->nama,
                 'latitude' => $request->lat,
                 'longitude' => $request->lon,
-                'alamat' => $request->alamat ?? $potensi->alamat,
+                'alamat' => $request->alamat ?? '',
                 'kategori' => $request->kategori,
                 'tags' => $request->tags ?? [],
-                'artikel_id' => $request->artikel_id ?? $potensi->artikel_id,
+                'artikel_id' => $request->artikel_id ?? null,
             ]);
 
             return response()->json([
-                'message' => 'Data potensi berhasil diperbarui',
-                'data' => $potensi
-            ]);
+            'type' => 'FeatureCollection',
+            'features' => [
+                'type' => 'Feature',
+                'geometry' => [
+                    'type' => 'Point',
+                    'coordinates' => [$potensi->longitude, $potensi->latitude],
+                ],
+                'properties' => [
+                    'id' => $potensi->id,
+                    'name' => $potensi->nama,
+                    'alamat' => $potensi->alamat ?? '',
+                    'kategori' => $potensi->kategori,
+                    'tags' => $potensi->tags,
+                    'artikel_id' => $potensi->artikel_id,
+                ],
+            ]
+        ]);
 
         } catch (ValidationException $e) {
             return response()->json([
