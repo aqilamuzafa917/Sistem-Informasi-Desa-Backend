@@ -8,16 +8,24 @@ use App\Models\ProfilDesa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Database\QueryException;
 
 class MapController extends Controller
 {
-    public function store(Request $request)
-    {
+
+public function store(Request $request)
+{
+    try {
         $request->validate([
-            'nama' => 'required|string',
+            'nama' => 'required|string|max:255',
             'lat' => 'required|numeric',
             'lon' => 'required|numeric',
-            'kategori' => ['required', 'string', Rule::in([KategoriPotensi::class])],
+            'kategori' => [
+                'required',
+                'string',
+                Rule::in(array_column(KategoriPotensi::cases(), 'value')),
+            ],
             'tags' => 'nullable|array',
         ]);
 
@@ -35,16 +43,33 @@ class MapController extends Controller
                 'type' => 'Feature',
                 'geometry' => [
                     'type' => 'Point',
-                    'coordinates' => [$potensi->longitude, $potensi->latitude]
+                    'coordinates' => [$potensi->longitude, $potensi->latitude],
                 ],
                 'properties' => [
                     'name' => $potensi->nama,
                     'kategori' => $potensi->kategori,
                     'tags' => $potensi->tags,
-                ]
+                ],
             ]
-        ]);
+        ], 201);
+
+    } catch (ValidationException $e) {
+        return response()->json([
+            'message' => 'Validasi gagal',
+            'errors' => $e->errors(),
+        ], 422);
+    } catch (QueryException $e) {
+        return response()->json([
+            'message' => 'Kesalahan database',
+            'error' => $e->getMessage(),
+        ], 500);
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Terjadi kesalahan saat menyimpan potensi',
+            'error' => $e->getMessage(),
+        ], 500);
     }
+}
 
 public function index()
 {
@@ -104,63 +129,72 @@ public function index()
         ]);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, PotensiLoc $potensi)
     {
-        $potensi = PotensiLoc::findOrFail($id);
+        try {
+            $request->validate([
+                'nama' => 'required|string|max:255',
+                'lat' => 'required|numeric',
+                'lon' => 'required|numeric',
+                'kategori' => [
+                    'required',
+                    'string',
+                    Rule::in(array_column(KategoriPotensi::cases(), 'value')),
+                ],
+                'tags' => 'nullable|array',
+            ]);
 
-        $request->validate([
-            'nama' => 'required|string',
-            'lat' => 'required|numeric',
-            'lon' => 'required|numeric',
-            'category' => 'required|string',
-            'tags' => 'nullable|array',
-        ]);
+            $potensi->update([
+                'nama' => $request->nama,
+                'latitude' => $request->lat,
+                'longitude' => $request->lon,
+                'kategori' => $request->kategori,
+                'tags' => $request->tags ?? [],
+            ]);
 
-        $potensi->update([
-            'nama' => $request->nama,
-            'latitude' => $request->lat,
-            'longitude' => $request->lon,
-            'kategori' => $request->category,
-            'tags' => $request->tags ?? [],
-        ]);
-        return response()->json($potensi);
+            return response()->json([
+                'message' => 'Data potensi berhasil diperbarui',
+                'data' => $potensi
+            ]);
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'Validasi gagal',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (QueryException $e) {
+            return response()->json([
+                'message' => 'Kesalahan database saat memperbarui data',
+                'error' => $e->getMessage(),
+            ], 500);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Terjadi kesalahan saat memperbarui data',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 
-    public function destroy($id)
+    public function destroy(PotensiLoc $potensi)
     {
-        $potensi = PotensiLoc::findOrFail($id)->delete();
-        if (!$potensi) {
-            return response()->json(['error' => 'Potensi tidak ditemukan'], 404);
+        try {
+            $potensi->delete();
+
+            return response()->json([
+                'message' => 'Data potensi berhasil dihapus'
+            ], 200);
+
+        } catch (QueryException $e) {
+            return response()->json([
+                'message' => 'Gagal menghapus data potensi (kesalahan database)',
+                'error' => $e->getMessage(),
+            ], 500);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Terjadi kesalahan saat menghapus data potensi',
+                'error' => $e->getMessage(),
+            ], 500);
         }
-
-        return response()->json(null, 204);
-    }
-
-    public function showByKategori(Request $request, $kategori)
-    {
-        $potensi = PotensiLoc::where('kategori', $kategori)->get();
-
-        if ($potensi->isEmpty()) {
-            return response()->json(['message' => 'Tidak ada potensi ditemukan untuk kategori ini'], 404);
-        }
-        
-        return response()->json([
-            'type' => 'FeatureCollection',
-            'features' => $potensi->map(function ($item) {
-                return [
-                    'type' => 'Feature',
-                    'geometry' => [
-                        'type' => 'Point',
-                        'coordinates' => [$item->longitude, $item->latitude],
-                    ],
-                    'properties' => [
-                        'name' => $item->nama,
-                        'kategori' => $item->kategori,
-                        'tags' => $item->tags,
-                    ],
-                ];
-            })->values(),
-        ]);
     }
 
     public function getBoundary()
@@ -267,5 +301,7 @@ public function index()
         return $inside;
     }
 
-
+    protected $casts = [
+        'tags' => 'array',
+    ];
 }
