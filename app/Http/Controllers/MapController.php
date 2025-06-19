@@ -25,22 +25,83 @@ class MapController extends Controller
             'nama' => $request->nama,
             'latitude' => $request->lat,
             'longitude' => $request->lon,
-            'kategori' => $request->category,
+            'kategori' => $request->kategori,
             'tags' => $request->tags ?? [],
         ]);
 
-        return response()->json($potensi, 201);
+        return response()->json([
+            'type' => 'FeatureCollection',
+            'features' => [
+                'type' => 'Feature',
+                'geometry' => [
+                    'type' => 'Point',
+                    'coordinates' => [$potensi->longitude, $potensi->latitude]
+                ],
+                'properties' => [
+                    'name' => $potensi->nama,
+                    'kategori' => $potensi->kategori,
+                    'tags' => $potensi->tags,
+                ]
+            ]
+        ]);
     }
 
-    public function index()
+public function index()
+{
+    $potensi = PotensiLoc::all();
+
+    if ($potensi->isEmpty()) {
+        return response()->json(['message' => 'Tidak ada potensi ditemukan'], 404);
+    }
+
+    $grouped = KategoriPotensi::cases();
+
+    $featuresByKategori = collect($grouped)->mapWithKeys(function ($kategoriEnum) use ($potensi) {
+        $filtered = $potensi->where('kategori', $kategoriEnum->value);
+
+        return [$kategoriEnum->value => [
+            'label' => $kategoriEnum->label(),
+            'type' => 'FeatureCollection',
+            'features' => $filtered->map(function ($item) {
+                return [
+                    'type' => 'Feature',
+                    'geometry' => [
+                        'type' => 'Point',
+                        'coordinates' => [$item->longitude, $item->latitude],
+                    ],
+                    'properties' => [
+                        'name' => $item->nama,
+                        'kategori' => $item->kategori,
+                        'tags' => $item->tags,
+                    ],
+                ];
+            })->values(),
+        ]];
+    });
+
+    return response()->json($featuresByKategori);
+}
+
+
+    public function show($id)
     {
-        $potensi = PotensiLoc::all();
-        
-        if ($potensi->isEmpty()) {
-            return response()->json(['message' => 'Tidak ada data potensi ditemukan'], 404);
-        }
-        
-        return response()->json($potensi);
+        $potensi = PotensiLoc::findOrFail($id);
+
+        return response()->json([
+            'type' => 'FeatureCollection',
+            'features' => [
+                'type' => 'Feature',
+                'geometry' => [
+                    'type' => 'Point',
+                    'coordinates' => [$potensi->longitude, $potensi->latitude],
+                ],
+                'properties' => [
+                    'name' => $potensi->nama,
+                    'kategori' => $potensi->kategori,
+                    'tags' => $potensi->tags,
+                ],
+            ]
+        ]);
     }
 
     public function update(Request $request, $id)
@@ -82,7 +143,24 @@ class MapController extends Controller
         if ($potensi->isEmpty()) {
             return response()->json(['message' => 'Tidak ada potensi ditemukan untuk kategori ini'], 404);
         }
-        return response()->json($potensi);
+        
+        return response()->json([
+            'type' => 'FeatureCollection',
+            'features' => $potensi->map(function ($item) {
+                return [
+                    'type' => 'Feature',
+                    'geometry' => [
+                        'type' => 'Point',
+                        'coordinates' => [$item->longitude, $item->latitude],
+                    ],
+                    'properties' => [
+                        'name' => $item->nama,
+                        'kategori' => $item->kategori,
+                        'tags' => $item->tags,
+                    ],
+                ];
+            })->values(),
+        ]);
     }
 
     public function getBoundary()
