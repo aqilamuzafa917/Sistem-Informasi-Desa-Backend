@@ -28,6 +28,7 @@ public function store(Request $request)
                 Rule::in(array_column(KategoriPotensi::cases(), 'value')),
             ],
             'tags' => 'nullable|array',
+            'artikel_id' => 'nullable|integer',
         ]);
 
         $potensi = PotensiLoc::create([
@@ -37,6 +38,7 @@ public function store(Request $request)
             'alamat' => $request->alamat,
             'kategori' => $request->kategori,
             'tags' => $request->tags ?? [],
+            'artikel_id' => $request->artikel_id,
         ]);
 
         return response()->json([
@@ -49,9 +51,10 @@ public function store(Request $request)
                 ],
                 'properties' => [
                     'name' => $potensi->nama,
-                    'alamat' => $potensi->alamat ?? 'Tidak ada alamat',
+                    'alamat' => $potensi->alamat ?? '',
                     'kategori' => $potensi->kategori,
                     'tags' => $potensi->tags,
+                    'artikel_id' => $potensi->artikel_id,
                 ],
             ]
         ], 201);
@@ -99,9 +102,10 @@ public function index()
                     ],
                     'properties' => [
                         'name' => $item->nama,
-                        'alamat' => $item->alamat ?? 'Tidak ada alamat',
+                        'alamat' => $item->alamat ?? '',
                         'kategori' => $item->kategori,
                         'tags' => $item->tags,
+                        'artikel_id' => $item->artikel_id,
                     ],
                 ];
             })->values(),
@@ -129,6 +133,7 @@ public function index()
                     'alamat' => $potensi->alamat ?? 'Tidak ada alamat',
                     'kategori' => $potensi->kategori,
                     'tags' => $potensi->tags,
+                    'artikel_id' => $potensi->artikel_id,
                 ],
             ]
         ]);
@@ -141,12 +146,14 @@ public function index()
                 'nama' => 'required|string|max:255',
                 'lat' => 'required|numeric',
                 'lon' => 'required|numeric',
+                'alamat' => 'nullable|string|max:255',
                 'kategori' => [
                     'required',
                     'string',
                     Rule::in(array_column(KategoriPotensi::cases(), 'value')),
                 ],
                 'tags' => 'nullable|array',
+                'artikel_id' => 'nullable|integer',
             ]);
 
             $potensi->update([
@@ -156,6 +163,7 @@ public function index()
                 'alamat' => $request->alamat ?? $potensi->alamat,
                 'kategori' => $request->kategori,
                 'tags' => $request->tags ?? [],
+                'artikel_id' => $request->artikel_id ?? $potensi->artikel_id,
             ]);
 
             return response()->json([
