@@ -65,7 +65,7 @@ class ArtikelSeeder extends Seeder
         ];
 
         foreach ($artikels as $artikel) {
-            DB::table('artikel')->insert($artikel);
+            DB::table('artikels')->insert($artikel);
         }
     }
 } 

@@ -116,6 +116,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/surat/{id}/restore', [SuratController::class, 'restore']); // Mengembalikan surat yang telah dihapus
     // Route::delete('/surat/{id}/delete', [SuratController::class, 'forceDelete']); // Hapus surat secara permanen
 
+    // Route admin download surat tanpa verifikasi tanggal lahir
+    Route::get('/surat/{id}/pdf', [SuratController::class, 'adminGeneratePDF']); // Download PDF surat (admin, tanpa verifikasi tanggal lahir)
+
     // CRUD Profil Desa (Admin)
     Route::get('/profil-desa', [ProfilDesaController::class, 'index']);
     Route::post('/profil-desa', [ProfilDesaController::class, 'store']); // Admin menyimpan atau memperbarui profil desa
