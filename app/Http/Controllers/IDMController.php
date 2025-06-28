@@ -176,4 +176,67 @@ class IDMController extends Controller
         $allIDM = IDM::orderBy('tahun', 'desc')->get();
         return response()->json($allIDM);
     }
+
+    /**
+     * Get IDM data for chatbot integration.
+     * Supports both specific year requests and returns latest data if no year specified.
+     */
+    public function getDataForChatbot(Request $request)
+    {
+        try {
+            $tahun = $request->input('tahun');
+            
+            // If no year specified, get the latest year
+            if (!$tahun) {
+                $latestIDM = IDM::orderBy('tahun', 'desc')->first();
+                if (!$latestIDM) {
+                    return response()->json([
+                        'status' => 'not_found',
+                        'message' => 'Data IDM tidak tersedia'
+                    ], 404);
+                }
+                $tahun = $latestIDM->tahun;
+            }
+
+            // Get IDM data for the specified year
+            $idm = IDM::where('tahun', $tahun)->first();
+            
+            if (!$idm) {
+                // Try to generate IDM data if it doesn't exist
+                try {
+                    $idm = $this->generateIDM($tahun);
+                } catch (\Exception $e) {
+                    return response()->json([
+                        'status' => 'not_found',
+                        'message' => 'Data IDM untuk tahun ' . $tahun . ' tidak tersedia dan gagal dihitung',
+                        'error' => $e->getMessage()
+                    ], 404);
+                }
+            }
+
+            // Format response for chatbot
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'tahun' => $idm->tahun,
+                    'skor_idm' => number_format($idm->skor_idm, 3),
+                    'status_idm' => $idm->status_idm,
+                    'target_status' => $idm->target_status,
+                    'skor_minimal_target' => $idm->skor_minimal ? number_format($idm->skor_minimal, 3) : null,
+                    'komponen' => [
+                        'skorIKS' => number_format($idm->komponen['skorIKS'] ?? 0, 3),
+                        'skorIKE' => number_format($idm->komponen['skorIKE'] ?? 0, 3),
+                        'skorIKL' => number_format($idm->komponen['skorIKL'] ?? 0, 3)
+                    ]
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Terjadi kesalahan saat mengambil data IDM',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

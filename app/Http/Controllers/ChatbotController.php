@@ -12,6 +12,7 @@ use App\Http\Controllers\SuratController;
 use App\Http\Controllers\ArtikelController;
 use App\Http\Controllers\ApbDesaController;
 use App\Http\Controllers\PendudukController;
+use App\Http\Controllers\IDMController; // [ADDED] Import IDMController
 use Illuminate\Http\Client\Response; // Add this import
 
 class ChatbotController extends Controller
@@ -83,6 +84,21 @@ class ChatbotController extends Controller
             'parameters' => [
                 'type' => 'OBJECT'
             ]
+        ],
+        // [ADDED] New function definition for IDM
+        [
+            'name' => 'get_idm_data',
+            'description' => 'Mendapatkan data Indeks Desa Membangun (IDM) untuk tahun tertentu. IDM adalah pengukuran komposit untuk menggambarkan kemajuan dan kemandirian desa. Jika tahun tidak disebutkan, akan menampilkan data untuk tahun terbaru yang tersedia.',
+            'parameters' => [
+                'type' => 'OBJECT',
+                'properties' => [
+                    'tahun' => [
+                        'type' => 'INTEGER',
+                        'description' => 'Tahun data IDM 4 digit yang diminta (opsional, contoh: 2023). Jika tidak diisi, akan mengambil data tahun terbaru.'
+                    ]
+                ],
+                'required' => []
+            ]
         ]
     ];
 
@@ -140,6 +156,14 @@ class ChatbotController extends Controller
                     $PendudukController = app(PendudukController::class);
                     // Fungsi ini tidak memerlukan argumen, jadi kita kirim request kosong
                     return $PendudukController->getStatistikPendudukForChatbot(new Request());
+
+                // [ADDED] New case for handling get_idm_data call
+                case 'get_idm_data':
+                    $idmController = app(IDMController::class);
+                    // Buat request dari argumen yang diberikan oleh AI
+                    $request = new Request($args); 
+                    // Panggil metode di IDMController yang menangani logika tahun
+                    return $idmController->getDataForChatbot($request);
                 
                 default:
                     return response()->json(['error' => 'Function "' . $functionName . '" not found.'], 404);
@@ -359,6 +383,7 @@ class ChatbotController extends Controller
             'contents' => $contents,
             'systemInstruction' => [
                 'parts' => [
+                    // [MODIFIED] Call the updated system instruction
                     ['text' => $this->getSystemInstruction()]
                 ]
             ],
@@ -443,7 +468,7 @@ class ChatbotController extends Controller
             $hour >= 19 && $hour < 24 => "Selamat Malam",
             default => "Selamat Pagi"
         };
-
+        // [MODIFIED] System prompt updated with IDM instructions
         return <<<PROMPT
         ### PERAN UTAMA & PERSONA ###
         Anda adalah "Asisten Desa Digital" untuk website Sistem Informasi Desa {$namaDesa}. Persona Anda adalah Cerdas, Ramah, Proaktif, dan sangat Membantu. Tujuan utama Anda adalah mempermudah warga mendapatkan informasi dan menggunakan layanan desa secara online dengan memberikan jawaban yang akurat, jelas, dan actionable.
@@ -496,8 +521,12 @@ class ChatbotController extends Controller
         **4. Statistik Kependudukan 👥 (`get_statistik_penduduk`)**
            - **Pemicu:** Pengguna bertanya tentang data demografi, jumlah penduduk, statistik warga, berapa banyak laki-laki/perempuan, data usia, agama, pekerjaan, atau pendidikan. "jumlah penduduk", "data demografi", "statistik warga".*SELALU panggil fungsi 'get_statistik_penduduk'
            - **URL Halaman Terkait:** {$websiteDesa}/infografis/penduduk
+
+        **5. Indeks Desa Membangun (IDM) 📊 (`get_idm_data`)**
+           - **Pemicu:** Pengguna bertanya tentang "IDM", "status desa" (maju, berkembang, mandiri), atau "skor pembangunan desa". Contoh: "berapa skor idm desa kita?", "apa status desa tahun 2024?".
+           - **URL Halaman Terkait:** {$websiteDesa}/infografis/idm
         
-        **5. Informasi Umum (Tanpa Fungsi)**
+        **6. Informasi Umum (Tanpa Fungsi)**
            - **Pemicu:** Pertanyaan umum tentang desa, cara mengajukan surat, peta, pengaduan, atau **fitur-fitur website**.
            - **Jawaban:** Jawab berdasarkan konteks yang diberikan di prompt ini. Untuk pertanyaan tentang fitur, berikan jawaban detail seperti pada contoh di bagian PRINSIP UTAMA. Selalu sertakan URL halaman terkait.
         
@@ -613,6 +642,29 @@ class ChatbotController extends Controller
              ```
              ❌ **Gagal Mengambil Data**
              Mohon maaf, terjadi kesalahan saat mencoba mengambil data statistik kependudukan. Silakan coba beberapa saat lagi.
+             ```
+
+        **5. Untuk `get_idm_data`:**
+           - **Jika `status: success`:**
+             ```
+             📊 **Skor Indeks Desa Membangun (IDM) Tahun [data.tahun]**
+
+             Pada tahun **[data.tahun]**, Desa {$namaDesa} memiliki skor IDM sebesar **[data.skor_idm]** dengan status **"[data.status_idm]"**.
+
+             - **Target Status Berikutnya:** [data.target_status]
+             - **Skor Minimal untuk Target:** [data.skor_minimal_target]
+
+             Skor ini dihitung berdasarkan 3 komponen utama:
+             - Indeks Ketahanan Sosial (IKS): [data.komponen.skorIKS]
+             - Indeks Ketahanan Ekonomi (IKE): [data.komponen.skorIKE]
+             - Indeks Ketahanan Lingkungan (IKL): [data.komponen.skorIKL]
+             
+             💡 Untuk melihat rincian dan perbandingan dari tahun ke tahun, kunjungi [Halaman Infografis IDM]({$websiteDesa}/infografis/idm).
+             ```
+           - **Jika `status: not_found`:**
+             ```
+             ❌ **Data IDM Tidak Ditemukan**
+             Mohon maaf, data Indeks Desa Membangun untuk tahun yang Anda minta tidak dapat ditemukan di sistem kami.
              ```
         
         ### PENANGANAN SPESIFIK: SAPAAN AWAL ###
