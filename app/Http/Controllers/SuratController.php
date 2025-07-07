@@ -409,6 +409,80 @@ class SuratController extends Controller
     }
 
     /**
+     * Generate PDF untuk surat yang sudah disetujui (User, dengan verifikasi NIK dan tanggal lahir).
+     * (GET /surat/pdf/{nik}/{id_surat})
+     */
+    public function generatePDF(string $nik, string $id)
+    {
+        try {
+            // Validasi NIK
+            if (!ctype_digit($nik) || strlen($nik) !== 16) {
+                return response()->json(['message' => 'Format NIK tidak valid. Harus 16 digit angka.'], 400);
+            }
+
+            // Ambil tanggal_lahir dari query string
+            $tanggal_lahir = request()->input('tanggal_lahir');
+            if (!$tanggal_lahir) {
+                return response()->json(['message' => 'Tanggal lahir wajib diisi.'], 400);
+            }
+
+            // Cek ke tabel penduduk
+            $penduduk = \App\Models\Penduduk::where('nik', $nik)
+                ->whereDate('tanggal_lahir', $tanggal_lahir)
+                ->first();
+            if (!$penduduk) {
+                return response()->json(['message' => 'Tanggal lahir tidak sesuai dengan NIK.'], 403);
+            }
+
+            // Eager load relasi yang dibutuhkan di PDF
+            $surat = Surat::with([
+                'pemohon',
+                'pendudukMeninggal',
+                'ibuBayi',
+                'ayahBayi',
+                'siswa'
+            ])->findOrFail($id); // Otomatis 404 jika tidak ada
+
+            // Periksa apakah NIK pemohon cocok
+            if ($surat->nik_pemohon !== $nik) {
+                return response()->json(['message' => 'Akses ditolak. NIK tidak sesuai dengan data surat.'], 403); // Forbidden
+            }
+
+            // Periksa status surat (Gunakan status_surat)
+            if ($surat->status_surat !== 'Disetujui' && $surat->status_surat !== 'Printed') {
+                return response()->json(['message' => 'Surat belum disetujui atau tidak valid untuk diunduh'], 403); // Forbidden
+            }
+
+            // Tentukan view berdasarkan jenis surat
+            $viewName = 'pdf.templates.' . Str::lower($surat->jenis_surat);
+            if (!view()->exists($viewName)) {
+                $viewName = 'pdf.surat_generic';
+                if (!view()->exists($viewName)) {
+                    return response()->json(['message' => 'Template PDF tidak ditemukan.'], 500);
+                }
+            }
+
+            // Load view spesifik dengan data surat
+            $pdf = Pdf::loadView($viewName, compact('surat'))->setPaper('F4', 'portrait');
+
+            // Buat nama file yang deskriptif
+            $filename = 'SURAT_'
+                . Str::upper(Str::slug($surat->jenis_surat, '_')) . '_'
+                . Str::upper(Str::slug($surat->pemohon->nama ?? $surat->nik_pemohon, '_')) . '_'
+                . $surat->getKey()
+                . '.pdf';
+
+            // Tawarkan download
+            return $pdf->download($filename);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['message' => 'Surat dengan ID tersebut tidak ditemukan'], 404);
+        } catch (\Exception $e) {
+            Log::error('Gagal generate PDF: ' . $e->getMessage());
+            return response()->json(['message' => 'Terjadi kesalahan saat membuat PDF surat'], 500);
+        }
+    }
+
+    /**
      * Generate PDF untuk surat (Admin, tanpa verifikasi tanggal lahir/NIK).
      * (GET /surat/{id}/pdf)
      */
